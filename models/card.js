@@ -12,17 +12,27 @@ const CardSchema = new Schema({
         default: ""
     },
 
-    cardType: {
+    typeLine: {
         type: String,
         required: true
     },
 
-    textBox: {
-        type: String,
-        default: ""
+    superTypes: {
+        type: [String],
+        default: []
     },
 
-    rarity: {
+    cardTypes: {
+        type: [String],
+        default: []
+    },
+
+    subTypes: {
+        type: [String],
+        default: []
+    },
+
+    oracleText: {
         type: String,
         default: ""
     },
@@ -35,6 +45,11 @@ const CardSchema = new Schema({
     colorIdentity: {
         type: [String],
         default: []
+    },
+
+    rarity: {
+        type: String,
+        default: ""
     },
 
     imgUrl: {
