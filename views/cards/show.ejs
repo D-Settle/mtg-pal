@@ -11,16 +11,18 @@
         <p class="card-text"><%=card.typeLine%></p>
         <br>
         <p class="card-text" style="white-space: pre-wrap;"><%= card.oracleText %></p>
-        <div class="mt-auto d-flex justify-content-end">
-            <form class="d-inline" action="/cards/<%=card._id%>?_method=DELETE" method="POST">
-                <button class="btn btn-danger">Delete</button>
-            </form> 
-            <a class="card-link btn btn-info" href="/cards/<%= card._id%>/edit">Edit</a>
-            <small class="text-body-secondary">
-                Last updated 3 mins ago
-            </small>
+            <div class="mt-auto d-flex flex-column align-items-end">
+                <div class="d-flex gap-2 mb-2">
+                    <a class="btn btn-info" href="/cards/<%= card._id %>/edit">Edit</a>
+                    <form action="/cards/<%= card._id %>?_method=DELETE" method="POST">
+                        <button class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+                <small class="text-body-secondary">
+                    Last updated 3 mins ago
+                </small>
+            </div>
         </div>
-      </div>
     </div>
   </div>
 </div>

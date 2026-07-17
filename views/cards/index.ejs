@@ -1,11 +1,15 @@
 
 <%- layout('layouts/boilerplate') %>
 
-<h1>Your Collection</h1>
+<div class="d-flex align-items-center gap-3 mb-3">
+    <h1 class="mb-0">Your Collection</h1>
 
-<div class="mb-3">
-    <a href="/cards/new" class="btn btn-primary">Add Card</a>
+    <a href="/cards/new" class="btn btn-primary">
+        Add Card
+    </a>
 </div>
+
+<hr class="border-secondary-subtle mb-4">
 
 <div class="row">
     <% for (let card of cards) { %>
