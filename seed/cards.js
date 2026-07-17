@@ -69,7 +69,7 @@ module.exports = [
       "Enchant creature you control.\nEnchanted creature gets +2/+2 for each Aura and Equipment attached to it.\nAll damage that would be dealt to you is dealt to enchanted creature instead.",
     colors: ["W"],
     colorIdentity: ["W"],
-    rarity: "Rarity",
+    rarity: "Rare",
     imageUrl: "https://cards.scryfall.io/display/front/f/7/f717c096-e161-426e-a8d7-c93b117e16b9.webp?1783905357"
   },
 
