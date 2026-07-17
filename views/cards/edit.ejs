@@ -74,8 +74,43 @@
                 <input type="checkbox" name="card[colorIdentity]" value="G"> Green
             </div>
             <div class="mb-3">
-                <label class="form-label" for="Rarity">Rarity</label>
-                <input class="form-control" type="text" id="Rarity" name="card[Rarity]" value="<%=card.rarity%>">
+                <label class="form-label" for="rarity">Rarity</label>
+
+                <select
+                    class="form-select"
+                    id="rarity"
+                    name="card[rarity]"
+                >
+                    <option value="">Select a rarity</option>
+
+                    <option
+                        value="Common"
+                        <%= card.rarity === "Common" ? "selected" : "" %>
+                    >
+                        Common
+                    </option>
+
+                    <option
+                        value="Uncommon"
+                        <%= card.rarity === "Uncommon" ? "selected" : "" %>
+                    >
+                        Uncommon
+                    </option>
+
+                    <option
+                        value="Rare"
+                        <%= card.rarity === "Rare" ? "selected" : "" %>
+                    >
+                        Rare
+                    </option>
+
+                    <option
+                        value="Mythic"
+                        <%= card.rarity === "Mythic" ? "selected" : "" %>
+                    >
+                        Mythic
+                    </option>
+                </select>
             </div>
             <div class="mb-3">
                 <label class="form-label" for="imageUrl">Image URL</label>
