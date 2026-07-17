@@ -1,0 +1,22 @@
+
+<%- layout('layouts/boilerplate') %>
+
+<h1>Your Collection</h1>
+
+<div class="mb-3">
+    <a href="/cards/new" class="btn btn-primary">Add Card</a>
+</div>
+
+<div class="row">
+    <% for (let card of cards) { %>
+        <div class="col-md-3 mb-4">
+            <a href="/cards/<%= card._id %>">
+                <img
+                    src="<%= card.imageUrl %>"
+                    alt="<%= card.name %>"
+                    class="img-fluid rounded shadow"
+                >
+            </a>
+        </div>
+    <% } %>
+</div>
