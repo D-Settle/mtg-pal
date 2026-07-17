@@ -52,7 +52,7 @@ const CardSchema = new Schema({
         default: ""
     },
 
-    imgUrl: {
+    imageUrl: {
         type: String,
         default: ""
     }
