@@ -17,7 +17,7 @@ const CardSchema = new Schema({
         required: true
     },
 
-    superTypes: {
+    supertypes: {
         type: [String],
         default: []
     },
@@ -27,7 +27,7 @@ const CardSchema = new Schema({
         default: []
     },
 
-    subTypes: {
+    subtypes: {
         type: [String],
         default: []
     },
@@ -49,7 +49,21 @@ const CardSchema = new Schema({
 
     rarity: {
         type: String,
+        enum: {
+            values: ["Common", "Uncommon", "Rare", "Mythic"],
+            message: "{VALUE} is not a valid rarity."
+        },
         default: ""
+    },
+
+    quantity: {
+        type: Number,
+        default: 1,
+        min: [1, "Quantity must be at least 1."],
+        validate: {
+            validator: Number.isInteger,
+            message: "Quantity must be a whole number."
+        }
     },
 
     imageUrl: {
