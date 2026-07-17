@@ -25,7 +25,7 @@ module.exports = [
     colors: [],
     colorIdentity: [],
     rarity: "Rare",
-    imageUrl: "https://cards.scryfall.io/display/front/9/1/91fdb56b-54d5-4272-8319-505ff987fe9b.webp?1783903215"
+    imageUrl: "https://cards.scryfall.io/display/front/8/d/8da5f34e-7f40-406a-88d2-bb1e3ed25200.webp?1783905305"
   },
   {
     name: "Command Tower",
