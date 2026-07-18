@@ -30,7 +30,7 @@ Built using Express, EJS, MongoDB, and Mongoose, this application allows users t
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
+git clone https://github.com/D-Settle/mtg-pal.git
 ```
 
 Install dependencies:
