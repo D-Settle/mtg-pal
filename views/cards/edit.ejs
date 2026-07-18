@@ -23,7 +23,7 @@
                             name="leftType"
                             placeholder="Supertype(s) Cardtype(s)"
                             required
-                            value="<%=card.superTypes%> <%=card.cardTypes%>"
+                            value="<%= card.supertypes.join(' ') %> <%= card.cardTypes.join(' ') %>"
                         >
                     </div>
 
@@ -38,7 +38,7 @@
                             id="rightType"
                             name="rightType"
                             placeholder="SubType(s)"
-                            value="<%=card.subTypes%>"
+                            value="<%=card.subtypes.join(' ')%>"
                         >
                     </div>
                 </div>
