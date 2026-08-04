@@ -47,6 +47,13 @@ app.get('/cards/new', (req, res) => {
     res.render('cards/new');
 })
 
+// SCRYFALL TESTING MIDDLEWARE
+app.get('/scryfall-test', catchAsync(async (req, res) => {
+    const card = await fetchCardFromScryfall('Sol Ring');
+
+    res.json(card);
+}))
+
 // This is a Post function to add a new card to the collection.  it takes a form with multiple inputs and creates a new card object in the database
 app.post("/cards", catchAsync(async (req, res) => {
     const cardData = buildCardData(req);
@@ -192,6 +199,33 @@ app.use((err, req, res, next) => {
 
     res.status(statusCode).send(message);
 });
+
+
+// SCRYFALL API HELPER FUNCTION
+async function fetchCardFromScryfall(cardName) {
+    const response = await fetch(
+        `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`,
+        {
+            headers: {
+                'User-Agent': 'mtg-pal/1.0',
+                'Accept': 'application/json'
+            }
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        const error = new Error(
+            data.details || 'Unable to find that card on Scryfall.'
+        );
+
+        error.statusCode = response.status;
+        throw error;
+    }
+
+    return data;
+}
 
 app.listen(3000, () => {
     console.log('Hello There!');
