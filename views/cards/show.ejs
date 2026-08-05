@@ -1,28 +1,112 @@
 <%- layout('layouts/boilerplate')%>
+
 <div class="card mb-3">
   <div class="row g-0">
+
+    <!-- Displays the selected card image and its hover-based quantity control. -->
     <div class="col-md-4">
-      <img src="<%=card.imageUrl%>" class="img-fluid rounded-start" alt="...">
+      <div class="image-wrapper">
+        <img
+          src="<%= card.imageUrl %>"
+          class="img-fluid rounded-start"
+          alt="<%= card.name %>"
+        >
+
+        <!-- Updates only this card's quantity without reloading the page. -->
+        <form
+          action="/cards/<%= card._id %>/quantity?_method=PATCH"
+          method="POST"
+          class="quantity-overlay position-absolute top-0 end-0 m-2"
+        >
+          <input
+            class="quantity-input form-control form-control-sm bg-black text-white border-secondary text-center"
+            type="number"
+            name="quantity"
+            value="<%= card.quantity %>"
+            min="1"
+            step="1"
+            aria-label="Quantity for <%= card.name %>"
+          >
+        </form>
+      </div>
     </div>
+
+    <!-- Displays the selected card's information and management controls. -->
     <div class="col-md-8">
       <div class="card-body d-flex flex-column h-100">
-        <h2 class="card-title"><%= card.name%> <%=card.manaCost%></h2>
+        <h2 class="card-title">
+          <%= card.name %> <%= card.manaCost %>
+        </h2>
+
         <br>
-        <p class="card-text"><%=card.typeLine%></p>
+
+        <p class="card-text">
+          <%= card.typeLine %>
+        </p>
+
         <br>
-        <p class="card-text" style="white-space: pre-wrap;"><%= card.oracleText %></p>
-            <div class="mt-auto d-flex flex-column align-items-end">
-                <div class="d-flex gap-2 mb-2">
-                    <a class="btn btn-info" href="/cards/<%= card._id %>/edit">Edit</a>
-                    <form action="/cards/<%= card._id %>?_method=DELETE" method="POST">
-                        <button class="btn btn-danger">Delete</button>
-                    </form>
-                </div>
-                <small class="text-body-secondary">
-                    Last updated 3 mins ago
-                </small>
-            </div>
+
+        <p class="card-text oracle-text"><%= card.oracleText %></p>
+
+        <div class="mt-auto d-flex flex-column align-items-end">
+          <div class="d-flex gap-2 mb-2">
+            <a
+              class="btn btn-info"
+              href="/cards/<%= card._id %>/edit"
+            >
+              Edit
+            </a>
+
+            <form
+              action="/cards/<%= card._id %>?_method=DELETE"
+              method="POST"
+            >
+              <button class="btn btn-danger">
+                Delete
+              </button>
+            </form>
+          </div>
+
+          <small class="text-body-secondary">
+            Last updated 3 mins ago
+          </small>
         </div>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- Uses the Fetch API to update quantity asynchronously. -->
+<script>
+  const quantityForm = document.querySelector('.quantity-overlay');
+  const quantityInput = quantityForm.querySelector('input[name="quantity"]');
+
+  // Sends the updated quantity to the server whenever the value changes.
+  quantityInput.addEventListener('change', async () => {
+    const previousQuantity = quantityInput.defaultValue;
+
+    try {
+      const response = await fetch(quantityForm.action, {
+        method: 'POST',
+        body: new FormData(quantityForm),
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Unable to update quantity.');
+      }
+
+      const result = await response.json();
+
+      quantityInput.value = result.quantity;
+      quantityInput.defaultValue = result.quantity;
+    } catch (error) {
+      console.error(error);
+
+      // Restores the previous value if the server update fails.
+      quantityInput.value = previousQuantity;
+    }
+  });
+</script>

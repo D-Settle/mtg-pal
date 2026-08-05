@@ -1,0 +1,31 @@
+/* Quantity overlay */
+
+.card-wrapper,
+.image-wrapper {
+    position: relative;
+}
+
+.quantity-overlay {
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: opacity .2s ease, transform .2s ease;
+}
+
+.card-wrapper:hover .quantity-overlay,
+.image-wrapper:hover .quantity-overlay,
+.quantity-overlay:focus-within {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.quantity-overlay {
+    z-index: 10;
+}
+
+.quantity-input {
+    width: 60px;
+}
+
+.oracle-text {
+    white-space: pre-wrap;
+}

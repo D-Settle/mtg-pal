@@ -1,22 +1,5 @@
 <%- layout('layouts/boilerplate') %>
 
-<style>
-    .card-wrapper {
-        position: relative;
-    }
-
-    .quantity-overlay {
-        opacity: 0;
-        transform: translateY(-5px);
-        transition: opacity .2s ease, transform .2s ease;
-    }
-
-    .card-wrapper:hover .quantity-overlay {
-        opacity: 1;
-        transform: translateY(0);
-    }
-</style>
-
 <div class="d-flex align-items-center gap-3 mb-3">
     <h1 class="mb-0">Your Collection</h1>
 
@@ -27,12 +10,14 @@
 
 <hr class="border-secondary-subtle mb-4">
 
+<!-- Displays every card in the collection in a four-column responsive grid. -->
 <div class="row">
     <% for (let card of cards) { %>
         <div class="col-md-3 mb-4">
 
             <div class="card-wrapper">
 
+                <!-- Each card image links to its individual show page. -->
                 <a href="/cards/<%= card._id %>">
                     <img
                         src="<%= card.imageUrl %>"
@@ -41,6 +26,7 @@
                     >
                 </a>
 
+                <!-- Updates only the card's quantity through the quantity PATCH route. -->
                 <form
                     action="/cards/<%= card._id %>/quantity?_method=PATCH"
                     method="POST"
@@ -71,6 +57,7 @@
 </div>
 
 <script>
+    // Updates card quantities asynchronously so the collection page does not reload.
     document.querySelectorAll('input[name="quantity"]').forEach(input => {
         input.addEventListener('change', async () => {
 

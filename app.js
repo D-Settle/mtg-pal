@@ -30,6 +30,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({ extended: true}));
 app.use(methodOverride('_method'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
     res.render('home')
@@ -47,7 +48,8 @@ app.get('/cards/new', (req, res) => {
     res.render('cards/new');
 })
 
-// Middleware to test the autocomplete function of scryfall api
+// Middleware that retrieves card name suggestions from the Scryfall API.
+// Used to provide live autocomplete while the user types a card name.
 app.get('/cards/autocomplete', catchAsync(async (req, res) => {
     const query = (req.query.q || '').trim();
 
@@ -78,6 +80,8 @@ app.get('/cards/autocomplete', catchAsync(async (req, res) => {
     res.json(data.data);
 }))
 
+// Middleware that retrieves complete card information from the Scryfall API.
+// This information is used to automatically fill out the new card form.
 app.get('/cards/scryfall-card', catchAsync(async (req, res) => {
     const cardName = (req.query.name || '').trim();
 
@@ -111,11 +115,13 @@ app.get('/cards/scryfall-card', catchAsync(async (req, res) => {
 }))
 
 // SCRYFALL TESTING MIDDLEWARE
+/*
 app.get('/scryfall-test', catchAsync(async (req, res) => {
     const card = await fetchCardFromScryfall('Sol Ring');
 
     res.json(card);
 }))
+*/
 
 // This is a Post function to add a new card to the collection.  it takes a form with multiple inputs and creates a new card object in the database
 app.post("/cards", catchAsync(async (req, res) => {
@@ -133,11 +139,14 @@ app.get('/cards/:id', catchAsync(async (req, res) => {
     res.render('cards/show', { card });
 }))
 
+// This is to show the edit view for an existing card.
 app.get('/cards/:id/edit', catchAsync(async (req, res) => {
     const card = await findCardOrThrow(req.params.id);
     res.render('cards/edit', { card });
 }))
 
+// Middleware that updates all editable information for an existing card.
+// Mongoose validators are run before the updated information is saved.
 app.put("/cards/:id", catchAsync(async (req, res) => {
     const { id } = req.params;
 
@@ -152,6 +161,8 @@ app.put("/cards/:id", catchAsync(async (req, res) => {
     res.redirect(`/cards/${id}`);
 }));
 
+// Middleware that updates only the quantity of an existing card.
+// Returns JSON so the quantity can be updated using AJAX without reloading the page.
 app.patch('/cards/:id/quantity', catchAsync(async (req, res) => {
     const { id } = req.params;
 
@@ -174,6 +185,7 @@ app.patch('/cards/:id/quantity', catchAsync(async (req, res) => {
     });
 }));
 
+// Middleware that deletes an existing card from the collection.
 app.delete('/cards/:id', catchAsync(async (req, res) => {
     const { id } = req.params;
 
@@ -183,6 +195,8 @@ app.delete('/cards/:id', catchAsync(async (req, res) => {
     res.redirect('/cards');
 }))
 
+// Helper function that converts submitted form information into card data.
+// It builds the type line and separates supertypes, card types, and subtypes.
 function buildCardData(req) {
     const leftWords = req.body.leftType
         .trim()
@@ -286,7 +300,8 @@ app.use((err, req, res, next) => {
 });
 
 
-// SCRYFALL API HELPER FUNCTION
+// Helper function that retrieves card information from the Scryfall API.
+// Throws an error if Scryfall cannot find or return the requested card.
 async function fetchCardFromScryfall(cardName) {
     const response = await fetch(
         `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`,

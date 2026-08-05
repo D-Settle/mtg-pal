@@ -1,8 +1,14 @@
 <%- layout('layouts/boilerplate')%>
+
 <div class="row">
     <h1 class="text-center">Add a Card</h1>
+
     <div class="col-6 offset-3">
+
+        <!-- Main form used to create and save a new card. -->
         <form action="/cards" method="POST" class="position-relative">
+
+            <!-- Card name search and starting quantity. -->
             <div class="row mb-3">
                 <div class="col position-relative">
                     <label class="form-label" for="name">Name</label>
@@ -16,6 +22,7 @@
                         required
                     >
 
+                    <!-- Displays live card-name suggestions returned from Scryfall. -->
                     <div
                         id="cardSuggestions"
                         class="list-group position-absolute w-100"
@@ -41,10 +48,14 @@
                     >
                 </div>
             </div>
+
+            <!-- Additional card information that is filled automatically after selecting a Scryfall result. -->
             <div class="mb-3">
                 <label class="form-label" for="manaCost">Mana Cost (Type it like this {W} or {1})</label>
                 <input class="form-control" type="text" id="manaCost" name="card[manaCost]">
             </div>
+
+            <!-- Separates the type line into left-side card types and right-side subtypes. -->
             <div class="mb-3">
                 <label class="form-label">Type Line</label>
 
@@ -79,6 +90,7 @@
                     Left side: supertypes and card types. Right side: subtypes.
                 </div>
             </div>
+
             <div class="mb-3">
                 <label class="form-label" for="oracleText">Oracle Text</label>
 
@@ -87,9 +99,10 @@
                     id="oracleText"
                     name="card[oracleText]"
                     rows="6"
-                    
                 ></textarea>
             </div>
+
+            <!-- Stores the card's printed colors. -->
             <div class="mb-3">
                 <label>Colors</label><br>
                 <input type="checkbox" name="card[colors]" value="W"> White
@@ -98,14 +111,17 @@
                 <input type="checkbox" name="card[colors]" value="R"> Red
                 <input type="checkbox" name="card[colors]" value="G"> Green
             </div>
+
+            <!-- Stores the card's color identity for future Commander validation. -->
             <div class="mb-3">
-                <label>Colors</label><br>
+                <label>Color Identity</label><br>
                 <input type="checkbox" name="card[colorIdentity]" value="W"> White
                 <input type="checkbox" name="card[colorIdentity]" value="U"> Blue
                 <input type="checkbox" name="card[colorIdentity]" value="B"> Black
                 <input type="checkbox" name="card[colorIdentity]" value="R"> Red
                 <input type="checkbox" name="card[colorIdentity]" value="G"> Green
             </div>
+
             <div class="mb-3">
                 <label class="form-label" for="rarity">Rarity</label>
 
@@ -121,15 +137,18 @@
                     <option value="Mythic">Mythic</option>
                 </select>
             </div>
+
             <div class="mb-3">
                 <label class="form-label" for="imageUrl">Image URL</label>
                 <input class="form-control" type="text" id="imageUrl" name="card[imageUrl]">
             </div>
+
             <div class="mb-3">
                 <button class="btn btn-success">Add Card</button>
             </div>
         </form>
 
+        <!-- Handles Scryfall autocomplete and automatically fills the form after a card is selected. -->
         <script>
             const nameInput = document.querySelector('#name');
             const manaCostInput = document.querySelector('#manaCost');
@@ -144,6 +163,7 @@
 
             let debounceTimer;
 
+            // Waits until the user pauses typing before requesting autocomplete results.
             nameInput.addEventListener('input', () => {
                 clearTimeout(debounceTimer);
 
@@ -174,11 +194,12 @@
                 }, 400);
             });
 
+            // Creates a clickable dropdown option for every returned card name.
             function showSuggestions(cardNames) {
                 suggestionsContainer.innerHTML = '';
 
                 for (const cardName of cardNames) {
-                        const suggestion = document.createElement('button');
+                    const suggestion = document.createElement('button');
 
                     suggestion.type = 'button';
                     suggestion.className =
@@ -197,6 +218,7 @@
                 }
             }
 
+            // Fetches the selected card's complete data and fills the matching form fields.
             async function fillCardForm(cardName) {
                 try {
                     const response = await fetch(
@@ -220,6 +242,7 @@
                 }
             }
 
+            // Splits the Scryfall type line around the dash and fills both type inputs.
             function fillTypeInputs(typeLine) {
                 const parts = typeLine.split(/\s+[—–-]\s+/);
 
@@ -227,6 +250,7 @@
                 rightTypeInput.value = parts[1] || '';
             }
 
+            // Converts lowercase Scryfall rarity values to match the form and Mongoose enum.
             function capitalize(value) {
                 if (!value) {
                     return '';
@@ -235,6 +259,7 @@
                 return value.charAt(0).toUpperCase() + value.slice(1);
             }
 
+            // Closes the autocomplete dropdown when the user clicks elsewhere.
             document.addEventListener('click', event => {
                 if (
                     event.target !== nameInput &&
@@ -244,6 +269,7 @@
                 }
             });
         </script>
-    <a href="/cards">All Cards</a>
+
+        <a href="/cards">All Cards</a>
     </div>
 </div>

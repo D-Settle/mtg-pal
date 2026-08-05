@@ -1,11 +1,17 @@
 <%- layout('layouts/boilerplate')%>
+
 <div class="row">
     <h1 class="text-center">Edit Card</h1>
+
     <div class="col-6 offset-3">
+
+        <!-- Main form used to update an existing card. -->
         <form
             action="/cards/<%=card.id%>?_method=PUT"
             method="POST"
         >
+
+            <!-- Displays the current card name and owned quantity. -->
             <div class="row mb-3">
                 <div class="col">
                     <label class="form-label" for="name">Name</label>
@@ -37,6 +43,7 @@
                 </div>
             </div>
 
+            <!-- Allows the card's mana cost to be updated. -->
             <div class="mb-3">
                 <label class="form-label" for="manaCost">
                     Mana Cost (Type it like this {W} or {1})
@@ -51,6 +58,7 @@
                 >
             </div>
 
+            <!-- Separates the type line into card types and subtypes. -->
             <div class="mb-3">
                 <label class="form-label">Type Line</label>
 
@@ -88,6 +96,7 @@
                 </div>
             </div>
 
+            <!-- Preserves Oracle text formatting while allowing edits. -->
             <div class="mb-3">
                 <label class="form-label" for="oracleText">Oracle Text</label>
 
@@ -99,6 +108,7 @@
                 ><%= card.oracleText %></textarea>
             </div>
 
+            <!-- Updates the card's printed colors. -->
             <div class="mb-3">
                 <label>Colors</label><br>
                 <input type="checkbox" name="card[colors]" value="W"> White
@@ -108,6 +118,7 @@
                 <input type="checkbox" name="card[colors]" value="G"> Green
             </div>
 
+            <!-- Updates the card's color identity for Commander validation. -->
             <div class="mb-3">
                 <label>Color Identity</label><br>
                 <input type="checkbox" name="card[colorIdentity]" value="W"> White
@@ -117,6 +128,7 @@
                 <input type="checkbox" name="card[colorIdentity]" value="G"> Green
             </div>
 
+            <!-- Displays the current rarity and allows another valid rarity to be selected. -->
             <div class="mb-3">
                 <label class="form-label" for="rarity">Rarity</label>
 
@@ -157,6 +169,7 @@
                 </select>
             </div>
 
+            <!-- Allows the stored card image URL to be updated. -->
             <div class="mb-3">
                 <label class="form-label" for="imageUrl">Image URL</label>
 
