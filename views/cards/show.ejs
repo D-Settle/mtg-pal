@@ -81,14 +81,13 @@
   const quantityForm = document.querySelector('.quantity-overlay');
   const quantityInput = quantityForm.querySelector('input[name="quantity"]');
 
-  // Sends the updated quantity to the server whenever the value changes.
   quantityInput.addEventListener('change', async () => {
     const previousQuantity = quantityInput.defaultValue;
 
     try {
       const response = await fetch(quantityForm.action, {
         method: 'POST',
-        body: new FormData(quantityForm),
+        body: new URLSearchParams(new FormData(quantityForm)),
         headers: {
           'Accept': 'application/json'
         }
@@ -104,8 +103,6 @@
       quantityInput.defaultValue = result.quantity;
     } catch (error) {
       console.error(error);
-
-      // Restores the previous value if the server update fails.
       quantityInput.value = previousQuantity;
     }
   });

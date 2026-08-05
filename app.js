@@ -175,7 +175,7 @@ app.patch('/cards/:id/quantity', catchAsync(async (req, res) => {
         },
         {
             runValidators: true,
-            new: true
+            returnDocument: 'after'
         }
     );
 

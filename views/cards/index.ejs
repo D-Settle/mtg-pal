@@ -60,13 +60,15 @@
     // Updates card quantities asynchronously so the collection page does not reload.
     document.querySelectorAll('input[name="quantity"]').forEach(input => {
         input.addEventListener('change', async () => {
-
             const form = input.form;
 
             try {
                 const response = await fetch(form.action, {
                     method: 'POST',
-                    body: new FormData(form)
+                    body: new URLSearchParams(new FormData(form)),
+                    headers: {
+                        'Accept': 'application/json'
+                    }
                 });
 
                 if (!response.ok) {
@@ -75,12 +77,11 @@
 
                 const result = await response.json();
 
-                console.log(result);
-
+                input.value = result.quantity;
+                input.defaultValue = result.quantity;
             } catch (error) {
                 console.error(error);
             }
-
         });
     });
 </script>
