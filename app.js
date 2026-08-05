@@ -47,6 +47,69 @@ app.get('/cards/new', (req, res) => {
     res.render('cards/new');
 })
 
+// Middleware to test the autocomplete function of scryfall api
+app.get('/cards/autocomplete', catchAsync(async (req, res) => {
+    const query = (req.query.q || '').trim();
+
+    if (query.length < 2) {
+        return res.json([]);
+    }
+
+    const response = await fetch(
+        `https://api.scryfall.com/cards/autocomplete?q=${encodeURIComponent(query)}`,
+        {
+            headers: {
+                'User-Agent': 'mtg-pal/1.0',
+                'Accept': 'application/json'
+            }
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        const error = new Error(
+            data.details || 'Unable to search for cards.'
+        );
+        error.statusCode = response.status;
+        throw error;
+    }
+
+    res.json(data.data);
+}))
+
+app.get('/cards/scryfall-card', catchAsync(async (req, res) => {
+    const cardName = (req.query.name || '').trim();
+
+    if (!cardName) {
+        const error = new Error('Please provide a card name.');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const response = await fetch(
+        `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}`,
+        {
+            headers: {
+                'User-Agent': 'mtg-pal/1.0',
+                'Accept': 'application/json'
+            }
+        }
+    );
+
+    const card = await response.json();
+
+    if (!response.ok) {
+        const error = new Error(
+            card.details || 'Unable to find that card.'
+        );
+        error.statusCode = response.status;
+        throw error;
+    }
+
+    res.json(card);
+}))
+
 // SCRYFALL TESTING MIDDLEWARE
 app.get('/scryfall-test', catchAsync(async (req, res) => {
     const card = await fetchCardFromScryfall('Sol Ring');
@@ -87,6 +150,28 @@ app.put("/cards/:id", catchAsync(async (req, res) => {
     });
 
     res.redirect(`/cards/${id}`);
+}));
+
+app.patch('/cards/:id/quantity', catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    await findCardOrThrow(id);
+
+    const updatedCard = await Card.findByIdAndUpdate(
+        id,
+        {
+            quantity: req.body.quantity
+        },
+        {
+            runValidators: true,
+            new: true
+        }
+    );
+
+    res.json({
+        success: true,
+        quantity: updatedCard.quantity
+    });
 }));
 
 app.delete('/cards/:id', catchAsync(async (req, res) => {

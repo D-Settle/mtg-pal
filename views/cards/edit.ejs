@@ -2,15 +2,55 @@
 <div class="row">
     <h1 class="text-center">Edit Card</h1>
     <div class="col-6 offset-3">
-        <form action="/cards/<%=card.id%>?_method=PUT" method="POST">
-            <div class="mb-3">
-                <label class="form-label" for="name">Name</label>
-                <input class="form-control" type="text" id="name" name="card[name]" value="<%=card.name%>">
+        <form
+            action="/cards/<%=card.id%>?_method=PUT"
+            method="POST"
+        >
+            <div class="row mb-3">
+                <div class="col">
+                    <label class="form-label" for="name">Name</label>
+
+                    <input
+                        class="form-control"
+                        type="text"
+                        id="name"
+                        name="card[name]"
+                        value="<%=card.name%>"
+                    >
+                </div>
+
+                <div class="col-auto">
+                    <label class="form-label text-center d-block" for="quantity">
+                        Quantity
+                    </label>
+
+                    <input
+                        class="form-control bg-black text-white border-secondary text-center"
+                        type="number"
+                        id="quantity"
+                        name="card[quantity]"
+                        value="<%= card.quantity %>"
+                        min="1"
+                        step="1"
+                        style="width: 85px;"
+                    >
+                </div>
             </div>
+
             <div class="mb-3">
-                <label class="form-label" for="manaCost">Mana Cost (Type it like this {W} or {1})</label>
-                <input class="form-control" type="text" id="manaCost" name="card[manaCost]" value="<%=card.manaCost%>">
+                <label class="form-label" for="manaCost">
+                    Mana Cost (Type it like this {W} or {1})
+                </label>
+
+                <input
+                    class="form-control"
+                    type="text"
+                    id="manaCost"
+                    name="card[manaCost]"
+                    value="<%=card.manaCost%>"
+                >
             </div>
+
             <div class="mb-3">
                 <label class="form-label">Type Line</label>
 
@@ -47,6 +87,7 @@
                     Left side: supertypes and card types. Right side: subtypes.
                 </div>
             </div>
+
             <div class="mb-3">
                 <label class="form-label" for="oracleText">Oracle Text</label>
 
@@ -57,6 +98,7 @@
                     rows="6"
                 ><%= card.oracleText %></textarea>
             </div>
+
             <div class="mb-3">
                 <label>Colors</label><br>
                 <input type="checkbox" name="card[colors]" value="W"> White
@@ -65,14 +107,16 @@
                 <input type="checkbox" name="card[colors]" value="R"> Red
                 <input type="checkbox" name="card[colors]" value="G"> Green
             </div>
+
             <div class="mb-3">
-                <label>Colors</label><br>
+                <label>Color Identity</label><br>
                 <input type="checkbox" name="card[colorIdentity]" value="W"> White
                 <input type="checkbox" name="card[colorIdentity]" value="U"> Blue
                 <input type="checkbox" name="card[colorIdentity]" value="B"> Black
                 <input type="checkbox" name="card[colorIdentity]" value="R"> Red
                 <input type="checkbox" name="card[colorIdentity]" value="G"> Green
             </div>
+
             <div class="mb-3">
                 <label class="form-label" for="rarity">Rarity</label>
 
@@ -112,14 +156,24 @@
                     </option>
                 </select>
             </div>
+
             <div class="mb-3">
                 <label class="form-label" for="imageUrl">Image URL</label>
-                <input class="form-control" type="text" id="imageUrl" name="card[imageUrl]" value="<%=card.imageUrl%>">
+
+                <input
+                    class="form-control"
+                    type="text"
+                    id="imageUrl"
+                    name="card[imageUrl]"
+                    value="<%=card.imageUrl%>"
+                >
             </div>
+
             <div class="mb-3">
                 <button class="btn btn-success">Update Card</button>
             </div>
         </form>
-    <a href="/cards">All Cards</a>
+
+        <a href="/cards">All Cards</a>
     </div>
 </div>

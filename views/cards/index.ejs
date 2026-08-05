@@ -1,5 +1,21 @@
-
 <%- layout('layouts/boilerplate') %>
+
+<style>
+    .card-wrapper {
+        position: relative;
+    }
+
+    .quantity-overlay {
+        opacity: 0;
+        transform: translateY(-5px);
+        transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .card-wrapper:hover .quantity-overlay {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
 
 <div class="d-flex align-items-center gap-3 mb-3">
     <h1 class="mb-0">Your Collection</h1>
@@ -14,13 +30,70 @@
 <div class="row">
     <% for (let card of cards) { %>
         <div class="col-md-3 mb-4">
-            <a href="/cards/<%= card._id %>">
-                <img
-                    src="<%= card.imageUrl %>"
-                    alt="<%= card.name %>"
-                    class="img-fluid rounded shadow"
+
+            <div class="card-wrapper">
+
+                <a href="/cards/<%= card._id %>">
+                    <img
+                        src="<%= card.imageUrl %>"
+                        alt="<%= card.name %>"
+                        class="img-fluid rounded shadow"
+                    >
+                </a>
+
+                <form
+                    action="/cards/<%= card._id %>/quantity?_method=PATCH"
+                    method="POST"
+                    class="quantity-overlay position-absolute top-0 end-0 m-2"
+                    style="z-index: 10;"
                 >
-            </a>
+                    <input
+                        type="hidden"
+                        name="redirectTo"
+                        value="/cards"
+                    >
+
+                    <input
+                        class="form-control form-control-sm bg-black text-white border-secondary text-center"
+                        type="number"
+                        name="quantity"
+                        value="<%= card.quantity %>"
+                        min="1"
+                        step="1"
+                        style="width: 60px;"
+                    >
+                </form>
+
+            </div>
+
         </div>
     <% } %>
 </div>
+
+<script>
+    document.querySelectorAll('input[name="quantity"]').forEach(input => {
+        input.addEventListener('change', async () => {
+
+            const form = input.form;
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Unable to update quantity.');
+                }
+
+                const result = await response.json();
+
+                console.log(result);
+
+            } catch (error) {
+                console.error(error);
+            }
+
+        });
+    });
+</script>

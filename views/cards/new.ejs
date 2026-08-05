@@ -2,10 +2,44 @@
 <div class="row">
     <h1 class="text-center">Add a Card</h1>
     <div class="col-6 offset-3">
-        <form action="/cards" method="POST">
-            <div class="mb-3">
-                <label class="form-label" for="name">Name</label>
-                <input class="form-control" type="text" id="name" name="card[name]">
+        <form action="/cards" method="POST" class="position-relative">
+            <div class="row mb-3">
+                <div class="col position-relative">
+                    <label class="form-label" for="name">Name</label>
+
+                    <input
+                        class="form-control"
+                        type="text"
+                        id="name"
+                        name="card[name]"
+                        autocomplete="off"
+                        required
+                    >
+
+                    <div
+                        id="cardSuggestions"
+                        class="list-group position-absolute w-100"
+                        style="z-index: 1000;"
+                    >
+                    </div>
+                </div>
+
+                <div class="col-auto">
+                    <label class="form-label text-center d-block" for="quantity">
+                        Quantity
+                    </label>
+
+                    <input
+                        class="form-control bg-black text-white border-secondary text-center"
+                        type="number"
+                        id="quantity"
+                        name="card[quantity]"
+                        value="1"
+                        min="1"
+                        step="1"
+                        style="width: 85px;"
+                    >
+                </div>
             </div>
             <div class="mb-3">
                 <label class="form-label" for="manaCost">Mana Cost (Type it like this {W} or {1})</label>
@@ -95,6 +129,121 @@
                 <button class="btn btn-success">Add Card</button>
             </div>
         </form>
+
+        <script>
+            const nameInput = document.querySelector('#name');
+            const manaCostInput = document.querySelector('#manaCost');
+            const leftTypeInput = document.querySelector('#leftType');
+            const rightTypeInput = document.querySelector('#rightType');
+            const oracleTextInput = document.querySelector('#oracleText');
+            const rarityInput = document.querySelector('#rarity');
+            const imageUrlInput = document.querySelector('#imageUrl');
+
+            const suggestionsContainer =
+                document.querySelector('#cardSuggestions');
+
+            let debounceTimer;
+
+            nameInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+
+                const query = nameInput.value.trim();
+
+                if (query.length < 2) {
+                    suggestionsContainer.innerHTML = '';
+                    return;
+                }
+
+                debounceTimer = setTimeout(async () => {
+                    try {
+                        const response = await fetch(
+                            `/cards/autocomplete?q=${encodeURIComponent(query)}`
+                        );
+
+                        if (!response.ok) {
+                            throw new Error('Unable to load card suggestions.');
+                        }
+
+                        const cardNames = await response.json();
+
+                        showSuggestions(cardNames);
+                    } catch (error) {
+                        console.error(error);
+                        suggestionsContainer.innerHTML = '';
+                    }
+                }, 400);
+            });
+
+            function showSuggestions(cardNames) {
+                suggestionsContainer.innerHTML = '';
+
+                for (const cardName of cardNames) {
+                        const suggestion = document.createElement('button');
+
+                    suggestion.type = 'button';
+                    suggestion.className =
+                        'list-group-item list-group-item-action';
+
+                    suggestion.textContent = cardName;
+
+                    suggestion.addEventListener('click', async () => {
+                        nameInput.value = cardName;
+                        suggestionsContainer.innerHTML = '';
+
+                        await fillCardForm(cardName);
+                    });
+
+                    suggestionsContainer.appendChild(suggestion);
+                }
+            }
+
+            async function fillCardForm(cardName) {
+                try {
+                    const response = await fetch(
+                        `/cards/scryfall-card?name=${encodeURIComponent(cardName)}`
+                    );
+
+                    if (!response.ok) {
+                        throw new Error('Unable to load card information.');
+                    }
+
+                    const card = await response.json();
+
+                    manaCostInput.value = card.mana_cost || '';
+                    oracleTextInput.value = card.oracle_text || '';
+                    rarityInput.value = capitalize(card.rarity || '');
+                    imageUrlInput.value = card.image_uris?.display || '';
+
+                    fillTypeInputs(card.type_line || '');
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            function fillTypeInputs(typeLine) {
+                const parts = typeLine.split(/\s+[—–-]\s+/);
+
+                leftTypeInput.value = parts[0] || '';
+                rightTypeInput.value = parts[1] || '';
+            }
+
+            function capitalize(value) {
+                if (!value) {
+                    return '';
+                }
+
+                return value.charAt(0).toUpperCase() + value.slice(1);
+            }
+
+            document.addEventListener('click', event => {
+                if (
+                    event.target !== nameInput &&
+                    !suggestionsContainer.contains(event.target)
+                ) {
+                    suggestionsContainer.innerHTML = '';
+                }
+            });
+        </script>
     <a href="/cards">All Cards</a>
     </div>
 </div>
