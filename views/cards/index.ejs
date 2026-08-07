@@ -57,6 +57,13 @@
 </div>
 
 <script>
+    // Prevents quantity forms from navigating to the JSON response when Enter is pressed.
+    document.querySelectorAll('.quantity-overlay').forEach(form => {
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+        });
+    });
+    
     // Updates card quantities asynchronously so the collection page does not reload.
     document.querySelectorAll('input[name="quantity"]').forEach(input => {
         input.addEventListener('change', async () => {

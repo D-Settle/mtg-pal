@@ -81,6 +81,10 @@
   const quantityForm = document.querySelector('.quantity-overlay');
   const quantityInput = quantityForm.querySelector('input[name="quantity"]');
 
+  quantityForm.addEventListener('submit', event => {
+    event.preventDefault();
+  });
+
   quantityInput.addEventListener('change', async () => {
     const previousQuantity = quantityInput.defaultValue;
 

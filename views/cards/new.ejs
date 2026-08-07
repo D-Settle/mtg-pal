@@ -149,126 +149,162 @@
         </form>
 
         <!-- Handles Scryfall autocomplete and automatically fills the form after a card is selected. -->
-        <script>
-            const nameInput = document.querySelector('#name');
-            const manaCostInput = document.querySelector('#manaCost');
-            const leftTypeInput = document.querySelector('#leftType');
-            const rightTypeInput = document.querySelector('#rightType');
-            const oracleTextInput = document.querySelector('#oracleText');
-            const rarityInput = document.querySelector('#rarity');
-            const imageUrlInput = document.querySelector('#imageUrl');
+<script>
+    // References to the form fields that are filled using Scryfall card data.
+    const nameInput = document.querySelector('#name');
+    const manaCostInput = document.querySelector('#manaCost');
+    const leftTypeInput = document.querySelector('#leftType');
+    const rightTypeInput = document.querySelector('#rightType');
+    const oracleTextInput = document.querySelector('#oracleText');
+    const rarityInput = document.querySelector('#rarity');
+    const imageUrlInput = document.querySelector('#imageUrl');
 
-            const suggestionsContainer =
-                document.querySelector('#cardSuggestions');
+    // Container used to display autocomplete card name suggestions.
+    const suggestionsContainer =
+        document.querySelector('#cardSuggestions');
 
-            let debounceTimer;
+    let debounceTimer;
 
-            // Waits until the user pauses typing before requesting autocomplete results.
-            nameInput.addEventListener('input', () => {
-                clearTimeout(debounceTimer);
 
-                const query = nameInput.value.trim();
+    // AUTOCOMPLETE
 
-                if (query.length < 2) {
-                    suggestionsContainer.innerHTML = '';
-                    return;
+    // Waits until the user pauses typing before requesting autocomplete results.
+    nameInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+
+        const query = nameInput.value.trim();
+
+        if (query.length < 2) {
+            suggestionsContainer.innerHTML = '';
+            return;
+        }
+
+        debounceTimer = setTimeout(async () => {
+            try {
+                const response = await fetch(
+                    `/cards/autocomplete?q=${encodeURIComponent(query)}`
+                );
+
+                if (!response.ok) {
+                    throw new Error('Unable to load card suggestions.');
                 }
 
-                debounceTimer = setTimeout(async () => {
-                    try {
-                        const response = await fetch(
-                            `/cards/autocomplete?q=${encodeURIComponent(query)}`
-                        );
+                const cardNames = await response.json();
 
-                        if (!response.ok) {
-                            throw new Error('Unable to load card suggestions.');
-                        }
+                showSuggestions(cardNames);
+            } catch (error) {
+                console.error(error);
+                suggestionsContainer.innerHTML = '';
+            }
+        }, 400);
+    });
 
-                        const cardNames = await response.json();
 
-                        showSuggestions(cardNames);
-                    } catch (error) {
-                        console.error(error);
-                        suggestionsContainer.innerHTML = '';
-                    }
-                }, 400);
-            });
+    // SCRYFALL CARD DATA
 
-            // Creates a clickable dropdown option for every returned card name.
-            function showSuggestions(cardNames) {
+    // Fetches the selected card's complete data and fills the matching form fields.
+    async function fillCardForm(cardName) {
+        try {
+            const response = await fetch(
+                `/cards/scryfall-card?name=${encodeURIComponent(cardName)}`
+            );
+
+            if (!response.ok) {
+                throw new Error('Unable to load card information.');
+            }
+
+            const card = await response.json();
+
+            manaCostInput.value = card.mana_cost || '';
+            oracleTextInput.value = card.oracle_text || '';
+            rarityInput.value = capitalize(card.rarity || '');
+            imageUrlInput.value = card.image_uris?.display || '';
+
+            fillTypeInputs(card.type_line || '');
+
+            fillCheckboxes(
+                'card[colors]',
+                card.colors || []
+            );
+
+            fillCheckboxes(
+                'card[colorIdentity]',
+                card.color_identity || []
+            );
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+
+    // HELPER FUNCTIONS
+
+    // Creates a clickable dropdown option for every returned card name.
+    function showSuggestions(cardNames) {
+        suggestionsContainer.innerHTML = '';
+
+        for (const cardName of cardNames) {
+            const suggestion = document.createElement('button');
+
+            suggestion.type = 'button';
+            suggestion.className =
+                'list-group-item list-group-item-action';
+
+            suggestion.textContent = cardName;
+
+            suggestion.addEventListener('click', async () => {
+                nameInput.value = cardName;
                 suggestionsContainer.innerHTML = '';
 
-                for (const cardName of cardNames) {
-                    const suggestion = document.createElement('button');
-
-                    suggestion.type = 'button';
-                    suggestion.className =
-                        'list-group-item list-group-item-action';
-
-                    suggestion.textContent = cardName;
-
-                    suggestion.addEventListener('click', async () => {
-                        nameInput.value = cardName;
-                        suggestionsContainer.innerHTML = '';
-
-                        await fillCardForm(cardName);
-                    });
-
-                    suggestionsContainer.appendChild(suggestion);
-                }
-            }
-
-            // Fetches the selected card's complete data and fills the matching form fields.
-            async function fillCardForm(cardName) {
-                try {
-                    const response = await fetch(
-                        `/cards/scryfall-card?name=${encodeURIComponent(cardName)}`
-                    );
-
-                    if (!response.ok) {
-                        throw new Error('Unable to load card information.');
-                    }
-
-                    const card = await response.json();
-
-                    manaCostInput.value = card.mana_cost || '';
-                    oracleTextInput.value = card.oracle_text || '';
-                    rarityInput.value = capitalize(card.rarity || '');
-                    imageUrlInput.value = card.image_uris?.display || '';
-
-                    fillTypeInputs(card.type_line || '');
-                } catch (error) {
-                    console.error(error);
-                }
-            }
-
-            // Splits the Scryfall type line around the dash and fills both type inputs.
-            function fillTypeInputs(typeLine) {
-                const parts = typeLine.split(/\s+[—–-]\s+/);
-
-                leftTypeInput.value = parts[0] || '';
-                rightTypeInput.value = parts[1] || '';
-            }
-
-            // Converts lowercase Scryfall rarity values to match the form and Mongoose enum.
-            function capitalize(value) {
-                if (!value) {
-                    return '';
-                }
-
-                return value.charAt(0).toUpperCase() + value.slice(1);
-            }
-
-            // Closes the autocomplete dropdown when the user clicks elsewhere.
-            document.addEventListener('click', event => {
-                if (
-                    event.target !== nameInput &&
-                    !suggestionsContainer.contains(event.target)
-                ) {
-                    suggestionsContainer.innerHTML = '';
-                }
+                await fillCardForm(cardName);
             });
-        </script>
+
+            suggestionsContainer.appendChild(suggestion);
+        }
+    }
+
+    // Splits the Scryfall type line around the dash and fills both type inputs.
+    function fillTypeInputs(typeLine) {
+        const parts = typeLine.split(/\s+[—–-]\s+/);
+
+        leftTypeInput.value = parts[0] || '';
+        rightTypeInput.value = parts[1] || '';
+    }
+
+    // Checks the color boxes that match the values returned by Scryfall.
+    function fillCheckboxes(fieldName, selectedValues) {
+        const checkboxes = document.querySelectorAll(
+            `input[name="${fieldName}"]`
+        );
+
+        for (const checkbox of checkboxes) {
+            checkbox.checked =
+                selectedValues.includes(checkbox.value);
+        }
+    }
+
+    // Converts lowercase Scryfall rarity values to match the form and Mongoose enum.
+    function capitalize(value) {
+        if (!value) {
+            return '';
+        }
+
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+
+    // PAGE INTERACTIONS
+
+    // Closes the autocomplete dropdown when the user clicks elsewhere.
+    document.addEventListener('click', event => {
+        if (
+            event.target !== nameInput &&
+            !suggestionsContainer.contains(event.target)
+        ) {
+            suggestionsContainer.innerHTML = '';
+        }
+    });
+</script>
 
         <a href="/cards">All Cards</a>
     </div>
