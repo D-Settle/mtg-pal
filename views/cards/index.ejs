@@ -1,30 +1,238 @@
 <%- layout('layouts/boilerplate') %>
 
-<div class="d-flex align-items-center gap-3 mb-3">
-    <h1 class="mb-0">Your Collection</h1>
+<div class="mb-3">
 
-    <a href="/cards/new" class="btn btn-primary">
-        Add Card
-    </a>
+    <!-- Collection title, Add Card button, and search. -->
+    <div class="d-flex align-items-center gap-3 mb-3">
+
+        <h1 class="mb-0">
+            Your Collection
+        </h1>
+
+        <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addCardModal"
+        >
+            Add Card
+        </button>
+
+        <input
+            type="search"
+            class="form-control collection-search ms-auto"
+            id="collectionSearch"
+            placeholder="Search your collection..."
+            autocomplete="off"
+        >
+
+    </div>
+
+    <!-- Collection filter and sorting controls. -->
+    <div class="d-flex flex-wrap align-items-center gap-2">
+
+        <select
+            class="form-select collection-filter"
+            id="typeFilter"
+        >
+            <option value="">All Types</option>
+            <option value="Creature">Creature</option>
+            <option value="Artifact">Artifact</option>
+            <option value="Enchantment">Enchantment</option>
+            <option value="Instant">Instant</option>
+            <option value="Sorcery">Sorcery</option>
+            <option value="Planeswalker">Planeswalker</option>
+            <option value="Land">Land</option>
+        </select>
+
+        <select
+            class="form-select collection-filter"
+            id="rarityFilter"
+        >
+            <option value="">All Rarities</option>
+            <option value="Common">Common</option>
+            <option value="Uncommon">Uncommon</option>
+            <option value="Rare">Rare</option>
+            <option value="Mythic">Mythic</option>
+        </select>
+
+        <select
+            class="form-select collection-filter"
+            id="finishFilter"
+        >
+            <option value="">All Finishes</option>
+            <option value="nonfoil">Nonfoil</option>
+            <option value="foil">Foil</option>
+            <option value="etched">Etched</option>
+        </select>
+
+        <select
+            class="form-select collection-sort ms-auto"
+            id="collectionSort"
+        >
+            <option value="name-asc">Name A–Z</option>
+            <option value="name-desc">Name Z–A</option>
+            <option value="newest">Newest Added</option>
+            <option value="oldest">Oldest Added</option>
+            <option value="quantity-desc">
+                Quantity High–Low
+            </option>
+        </select>
+    </div>
+    <!-- Color identity filter. -->
+    <div
+        class="btn-group mt-3"
+        role="group"
+        aria-label="Color identity filter"
+        id="colorIdentityFilter"
+    >
+        <input
+            type="checkbox"
+            class="btn-check color-filter"
+            id="filterWhite"
+            value="W"
+            autocomplete="off"
+        >
+        <label
+            class="btn btn-outline-secondary"
+            for="filterWhite"
+        >
+            <img
+                src="/images/mana/W.svg"
+                alt="White"
+                class="mana-symbol"
+            >
+        </label>
+
+
+        <input
+            type="checkbox"
+            class="btn-check color-filter"
+            id="filterBlue"
+            value="U"
+            autocomplete="off"
+        >
+        <label
+            class="btn btn-outline-secondary"
+            for="filterBlue"
+        >
+            <img
+                src="/images/mana/U.svg"
+                alt="Blue"
+                class="mana-symbol"
+            >
+        </label>
+
+
+        <input
+            type="checkbox"
+            class="btn-check color-filter"
+            id="filterBlack"
+            value="B"
+            autocomplete="off"
+        >
+        <label
+            class="btn btn-outline-secondary"
+            for="filterBlack"
+        >
+            <img
+                src="/images/mana/B.svg"
+                alt="Black"
+                class="mana-symbol"
+            >
+        </label>
+
+
+        <input
+            type="checkbox"
+            class="btn-check color-filter"
+            id="filterRed"
+            value="R"
+            autocomplete="off"
+        >
+        <label
+            class="btn btn-outline-secondary"
+            for="filterRed"
+        >
+            <img
+                src="/images/mana/R.svg"
+                alt="Red"
+                class="mana-symbol"
+            >
+        </label>
+
+
+        <input
+            type="checkbox"
+            class="btn-check color-filter"
+            id="filterGreen"
+            value="G"
+            autocomplete="off"
+        >
+        <label
+            class="btn btn-outline-secondary"
+            for="filterGreen"
+        >
+            <img
+                src="/images/mana/G.svg"
+                alt="Green"
+                class="mana-symbol"
+            >
+        </label>
+
+
+        <input
+            type="checkbox"
+            class="btn-check"
+            id="filterColorless"
+            autocomplete="off"
+        >
+        <label
+            class="btn btn-outline-secondary"
+            for="filterColorless"
+        >
+            <img
+                src="/images/mana/C.svg"
+                alt="Colorless"
+                class="mana-symbol"
+            >
+        </label>
+    </div>
+
 </div>
 
 <hr class="border-secondary-subtle mb-4">
 
 <!-- Displays every card in the collection in a four-column responsive grid. -->
-<div class="row">
+<div class="row" id="collectionGrid">
     <% for (let card of cards) { %>
-        <div class="col-md-3 mb-4">
+        <div
+            class="col-md-3 mb-4 collection-card"
+            data-name="<%= card.name.toLowerCase() %>"
+            data-colors="<%= card.colorIdentity.join(',') %>"
+            data-types="<%= card.cardTypes.join(',') %>"
+            data-rarity="<%= card.rarity || '' %>"
+            data-finish="<%= card.finish || '' %>"
+            data-quantity="<%= card.quantity %>"
+            data-created="<%= card.createdAt ? card.createdAt.getTime() : 0 %>"
+        >
 
-            <div class="card-wrapper">
+            <div class="card-wrapper <%= card.finish === 'foil' ? 'foil-wrapper' : '' %>">
 
                 <!-- Each card image links to its individual show page. -->
-                <a href="/cards/<%= card._id %>">
+                <button
+                    type="button"
+                    class="card-details-button border-0 bg-transparent p-0"
+                    data-card-id="<%= card._id %>"
+                    data-bs-toggle="modal"
+                    data-bs-target="#cardDetailsModal"
+                >
                     <img
                         src="<%= card.imageUrl %>"
                         alt="<%= card.name %>"
-                        class="img-fluid rounded shadow"
+                        class="img-fluid rounded shadow <%= card.finish === 'foil' ? 'foil-card' : '' %>"
                     >
-                </a>
+                </button>
 
                 <!-- Updates only the card's quantity through the quantity PATCH route. -->
                 <form
@@ -56,14 +264,19 @@
     <% } %>
 </div>
 
+<%- include('addCardModal') %>
+<%- include('cardDetailsModal') %>
+
 <script>
+    // QUANTITY UPDATES
+
     // Prevents quantity forms from navigating to the JSON response when Enter is pressed.
     document.querySelectorAll('.quantity-overlay').forEach(form => {
         form.addEventListener('submit', event => {
             event.preventDefault();
         });
     });
-    
+
     // Updates card quantities asynchronously so the collection page does not reload.
     document.querySelectorAll('input[name="quantity"]').forEach(input => {
         input.addEventListener('change', async () => {
@@ -86,9 +299,753 @@
 
                 input.value = result.quantity;
                 input.defaultValue = result.quantity;
+
+                const collectionCard =
+                    input.closest('.collection-card');
+
+                if (collectionCard) {
+                    collectionCard.dataset.quantity =
+                        result.quantity;
+                }
             } catch (error) {
                 console.error(error);
             }
         });
     });
+
+
+    // ADD CARD MODAL
+
+    const modalCardNameInput =
+        document.querySelector('#modalCardName');
+
+    const modalCardSuggestions =
+        document.querySelector('#modalCardSuggestions');
+
+    const modalCardDetails =
+        document.querySelector('#modalCardDetails');
+
+    const modalPrinting =
+        document.querySelector('#modalPrinting');
+
+    const modalFinish =
+        document.querySelector('#modalFinish');
+
+    const modalAddCardButton =
+        document.querySelector('#modalAddCardButton');
+
+    const modalCardImage =
+        document.querySelector('#modalCardImage');
+
+    const modalCardTitle =
+        document.querySelector('#modalCardTitle');
+
+    const modalCardTypeLine =
+        document.querySelector('#modalCardTypeLine');
+
+    const modalCardOracleText =
+        document.querySelector('#modalCardOracleText');
+
+    const modalCardSet =
+        document.querySelector('#modalCardSet');
+
+    const modalScryfallId =
+        document.querySelector('#modalScryfallId');
+
+    const modalOracleId =
+        document.querySelector('#modalOracleId');
+
+    const modalSetCode =
+        document.querySelector('#modalSetCode');
+
+    const modalSetName =
+        document.querySelector('#modalSetName');
+
+    const modalCollectorNumber =
+        document.querySelector('#modalCollectorNumber');
+
+    const modalManaCost =
+        document.querySelector('#modalManaCost');
+
+    const modalLeftType =
+        document.querySelector('#modalLeftType');
+
+    const modalRightType =
+        document.querySelector('#modalRightType');
+
+    const modalOracleTextInput =
+        document.querySelector('#modalOracleTextInput');
+
+    const modalRarity =
+        document.querySelector('#modalRarity');
+
+    const modalImageUrl =
+        document.querySelector('#modalImageUrl');
+
+    const modalColors =
+        document.querySelector('#modalColors');
+
+    const modalColorIdentity =
+        document.querySelector('#modalColorIdentity');
+
+    let modalDebounceTimer;
+
+
+    // ADD CARD AUTOCOMPLETE
+
+    // Waits until the user pauses typing before requesting autocomplete results.
+    modalCardNameInput.addEventListener('input', () => {
+        clearTimeout(modalDebounceTimer);
+
+        const query = modalCardNameInput.value.trim();
+
+        modalAddCardButton.disabled = true;
+        modalCardDetails.classList.add('d-none');
+
+        if (query.length < 2) {
+            modalCardSuggestions.innerHTML = '';
+            return;
+        }
+
+        modalDebounceTimer = setTimeout(async () => {
+            try {
+                const response = await fetch(
+                    `/cards/autocomplete?q=${encodeURIComponent(query)}`
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        'Unable to load card suggestions.'
+                    );
+                }
+
+                const cardNames = await response.json();
+
+                showModalSuggestions(cardNames);
+            } catch (error) {
+                console.error(error);
+                modalCardSuggestions.innerHTML = '';
+            }
+        }, 400);
+    });
+
+
+    // ADD CARD SCRYFALL DATA
+
+    // Fetches the selected card and fills the Add Card modal with its information.
+    async function fillModalCard(cardName) {
+        try {
+            const response = await fetch(
+                `/cards/scryfall-card?name=${encodeURIComponent(cardName)}`
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Unable to load card information.'
+                );
+            }
+
+            const card = await response.json();
+
+            fillModalCardFields(card);
+
+            await loadModalPrintings(
+                card.oracle_id,
+                card.id
+            );
+
+            modalCardDetails.classList.remove('d-none');
+            modalAddCardButton.disabled = false;
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+
+    // ADD CARD PRINTING SELECTION
+
+    // Loads the selected printing and updates the Add Card preview.
+    modalPrinting.addEventListener('change', async () => {
+        const scryfallId = modalPrinting.value;
+
+        if (!scryfallId) {
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `/cards/printing/${encodeURIComponent(scryfallId)}`
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Unable to load selected printing.'
+                );
+            }
+
+            const card = await response.json();
+
+            fillModalCardFields(card);
+        } catch (error) {
+            console.error(error);
+        }
+    });
+
+
+    // ADD CARD HELPER FUNCTIONS
+
+    // Creates clickable autocomplete suggestions inside the Add Card modal.
+    function showModalSuggestions(cardNames) {
+        modalCardSuggestions.innerHTML = '';
+
+        for (const cardName of cardNames) {
+            const suggestion =
+                document.createElement('button');
+
+            suggestion.type = 'button';
+
+            suggestion.className =
+                'list-group-item list-group-item-action';
+
+            suggestion.textContent = cardName;
+
+            suggestion.addEventListener('click', async () => {
+                modalCardNameInput.value = cardName;
+                modalCardSuggestions.innerHTML = '';
+
+                await fillModalCard(cardName);
+            });
+
+            modalCardSuggestions.appendChild(suggestion);
+        }
+    }
+
+    // Loads available printings into the Add Card printing dropdown.
+    async function loadModalPrintings(
+        oracleId,
+        selectedScryfallId
+    ) {
+        modalPrinting.innerHTML = '';
+        modalPrinting.disabled = true;
+
+        try {
+            const response = await fetch(
+                `/cards/printings/${encodeURIComponent(oracleId)}`
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Unable to load card printings.'
+                );
+            }
+
+            const printings = await response.json();
+
+            for (const printing of printings) {
+                const option =
+                    document.createElement('option');
+
+                option.value = printing.id;
+
+                option.textContent =
+                    `${printing.set_name} ` +
+                    `(${printing.set.toUpperCase()}) ` +
+                    `#${printing.collector_number}`;
+
+                option.selected =
+                    printing.id === selectedScryfallId;
+
+                modalPrinting.appendChild(option);
+            }
+
+            modalPrinting.disabled = false;
+        } catch (error) {
+            console.error(error);
+
+            modalPrinting.innerHTML =
+                '<option value="">Unable to load printings</option>';
+        }
+    }
+
+    // Fills the Add Card preview and hidden fields needed by POST /cards.
+    function fillModalCardFields(card) {
+        modalScryfallId.value = card.id || '';
+        modalOracleId.value = card.oracle_id || '';
+        modalSetCode.value = card.set || '';
+        modalSetName.value = card.set_name || '';
+
+        modalCollectorNumber.value =
+            card.collector_number || '';
+
+        modalManaCost.value =
+            card.mana_cost || '';
+
+        modalOracleTextInput.value =
+            card.oracle_text || '';
+
+        modalRarity.value =
+            capitalizeModal(card.rarity || '');
+
+        modalImageUrl.value =
+            card.image_uris?.display || '';
+
+        const parts =
+            (card.type_line || '').split(/\s+[—–-]\s+/);
+
+        modalLeftType.value =
+            parts[0] || '';
+
+        modalRightType.value =
+            parts[1] || '';
+
+        modalCardImage.src =
+            card.image_uris?.display || '';
+
+        modalCardTitle.textContent =
+            `${card.name} ${card.mana_cost || ''}`;
+
+        modalCardTypeLine.textContent =
+            card.type_line || '';
+
+        modalCardOracleText.textContent =
+            card.oracle_text || '';
+
+        modalCardSet.textContent =
+            `${card.set_name || ''} ` +
+            `(${(card.set || '').toUpperCase()}) ` +
+            `#${card.collector_number || ''}`;
+
+        fillModalArrayInputs(
+            modalColors,
+            'card[colors]',
+            card.colors || []
+        );
+
+        fillModalArrayInputs(
+            modalColorIdentity,
+            'card[colorIdentity]',
+            card.color_identity || []
+        );
+
+        fillModalFinishes(card.finishes || []);
+    }
+
+    // Creates hidden inputs for array values like colors and color identity.
+    function fillModalArrayInputs(
+        container,
+        fieldName,
+        values
+    ) {
+        container.innerHTML = '';
+
+        for (const value of values) {
+            const input =
+                document.createElement('input');
+
+            input.type = 'hidden';
+            input.name = fieldName;
+            input.value = value;
+
+            container.appendChild(input);
+        }
+    }
+
+    // Populates the Finish dropdown with finishes supported by the selected printing.
+    function fillModalFinishes(finishes) {
+        modalFinish.innerHTML = '';
+
+        if (finishes.length === 0) {
+            modalFinish.disabled = true;
+
+            const option = document.createElement('option');
+
+            option.value = '';
+            option.textContent = 'No finishes available';
+
+            modalFinish.appendChild(option);
+
+            return;
+        }
+
+        for (const finish of finishes) {
+            const option = document.createElement('option');
+
+            option.value = finish;
+
+            option.textContent =
+                finish.charAt(0).toUpperCase() +
+                finish.slice(1);
+
+            modalFinish.appendChild(option);
+        }
+
+        modalFinish.disabled = false;
+    }
+
+    // Converts lowercase Scryfall rarity values to match the Mongoose enum.
+    function capitalizeModal(value) {
+        if (!value) {
+            return '';
+        }
+
+        return value.charAt(0).toUpperCase() +
+            value.slice(1);
+    }
+
+
+    // CARD DETAILS MODAL
+
+    const detailsCardImage =
+        document.querySelector('#detailsCardImage');
+
+    const detailsCardTitle =
+        document.querySelector('#detailsCardTitle');
+
+    const detailsCardTypeLine =
+        document.querySelector('#detailsCardTypeLine');
+
+    const detailsCardOracleText =
+        document.querySelector('#detailsCardOracleText');
+
+    const detailsCardSet =
+        document.querySelector('#detailsCardSet');
+
+    const detailsQuantityForm =
+        document.querySelector('#detailsQuantityForm');
+
+    const detailsQuantity =
+        document.querySelector('#detailsQuantity');
+
+    const detailsEditButton =
+        document.querySelector('#detailsEditButton');
+
+    const detailsDeleteForm =
+        document.querySelector('#detailsDeleteForm');
+
+
+    // Opens the Card Details modal and loads the selected card.
+    document.querySelectorAll('.card-details-button').forEach(button => {
+        button.addEventListener('click', async () => {
+            const cardId = button.dataset.cardId;
+
+            try {
+                const response = await fetch(
+                    `/cards/${encodeURIComponent(cardId)}/data`
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        'Unable to load card information.'
+                    );
+                }
+
+                const card = await response.json();
+
+                fillCardDetailsModal(card);
+            } catch (error) {
+                console.error(error);
+            }
+        });
+    });
+
+
+    // Populates the Card Details modal with information from MongoDB.
+    function fillCardDetailsModal(card) {
+        detailsCardImage.src =
+            card.imageUrl || '';
+
+        detailsCardImage.alt =
+            card.name || 'Selected card';
+
+        detailsCardTitle.textContent =
+            `${card.name} ${card.manaCost || ''}`;
+
+        detailsCardTypeLine.textContent =
+            card.typeLine || '';
+
+        detailsCardOracleText.textContent =
+            card.oracleText || '';
+
+        detailsCardSet.textContent =
+            `${card.setName || ''} ` +
+            `${card.setCode ? `(${card.setCode.toUpperCase()})` : ''} ` +
+            `${card.collectorNumber ? `#${card.collectorNumber}` : ''}`;
+
+        detailsQuantity.value =
+            card.quantity;
+
+        detailsQuantity.defaultValue =
+            card.quantity;
+
+        detailsQuantityForm.action =
+            `/cards/${card._id}/quantity?_method=PATCH`;
+
+        detailsEditButton.href =
+            `/cards/${card._id}/edit`;
+
+        detailsDeleteForm.action =
+            `/cards/${card._id}?_method=DELETE`;
+    }
+
+
+    // Prevents the Card Details quantity form from navigating to JSON.
+    detailsQuantityForm.addEventListener('submit', event => {
+        event.preventDefault();
+    });
+
+
+    // Updates quantity from inside the Card Details modal without reloading.
+    detailsQuantity.addEventListener('change', async () => {
+        const previousQuantity =
+            detailsQuantity.defaultValue;
+
+        try {
+            const response = await fetch(
+                detailsQuantityForm.action,
+                {
+                    method: 'POST',
+                    body: new URLSearchParams(
+                        new FormData(detailsQuantityForm)
+                    ),
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Unable to update quantity.'
+                );
+            }
+
+            const result = await response.json();
+
+            detailsQuantity.value =
+                result.quantity;
+
+            detailsQuantity.defaultValue =
+                result.quantity;
+
+        } catch (error) {
+            console.error(error);
+
+            detailsQuantity.value =
+                previousQuantity;
+        }
+    });
+
+
+    // PAGE INTERACTIONS
+
+    // Closes Add Card autocomplete suggestions when the user clicks somewhere else.
+    document.addEventListener('click', event => {
+        if (
+            event.target !== modalCardNameInput &&
+            !modalCardSuggestions.contains(event.target)
+        ) {
+            modalCardSuggestions.innerHTML = '';
+        }
+    });
+
+    // COLLECTION FILTERS AND SORTING
+
+    const collectionSearch =
+        document.querySelector('#collectionSearch');
+
+    const colorFilters =
+        document.querySelectorAll('.color-filter');
+
+    const colorlessFilter =
+        document.querySelector('#filterColorless');
+
+    const typeFilter =
+        document.querySelector('#typeFilter');
+
+    const rarityFilter =
+        document.querySelector('#rarityFilter');
+
+    const finishFilter =
+        document.querySelector('#finishFilter');
+
+    const collectionSort =
+        document.querySelector('#collectionSort');
+
+    const collectionGrid =
+        document.querySelector('#collectionGrid');
+
+    const collectionCards =
+        Array.from(
+            document.querySelectorAll('.collection-card')
+        );
+
+
+    // Filters the collection using the search bar and all active filters.
+    function filterCollection() {
+        const searchTerm =
+            collectionSearch.value.trim().toLowerCase();
+
+        const selectedColors =
+            Array.from(colorFilters)
+                .filter(input => input.checked)
+                .map(input => input.value);
+
+        const selectedType =
+            typeFilter.value;
+
+        const selectedRarity =
+            rarityFilter.value;
+
+        const selectedFinish =
+            finishFilter.value;
+
+        for (const card of collectionCards) {
+            const name =
+                card.dataset.name || '';
+
+            const colors =
+                card.dataset.colors
+                    ? card.dataset.colors.split(',')
+                    : [];
+
+            const types =
+                card.dataset.types
+                    ? card.dataset.types.split(',')
+                    : [];
+
+            const rarity =
+                card.dataset.rarity || '';
+
+            const finish =
+                card.dataset.finish || '';
+
+            const matchesSearch =
+                name.includes(searchTerm);
+
+            const noColorFilter =
+                selectedColors.length === 0 &&
+                !colorlessFilter.checked;
+
+            const matchesColor =
+                noColorFilter ||
+                (
+                    colorlessFilter.checked &&
+                    colors.length === 0
+                ) ||
+                (
+                    selectedColors.length > 0 &&
+                    colors.length === selectedColors.length &&
+                    selectedColors.every(color =>
+                        colors.includes(color)
+                    )
+                );
+
+            const matchesType =
+                !selectedType ||
+                types.includes(selectedType);
+
+            const matchesRarity =
+                !selectedRarity ||
+                rarity === selectedRarity;
+
+            const matchesFinish =
+                !selectedFinish ||
+                finish === selectedFinish;
+
+            const matchesAll =
+                matchesSearch &&
+                matchesColor &&
+                matchesType &&
+                matchesRarity &&
+                matchesFinish;
+
+            card.classList.toggle(
+                'd-none',
+                !matchesAll
+            );
+        }
+    }
+
+
+    // Reorders the rendered cards according to the selected sort option.
+    function sortCollection() {
+        const sortValue =
+            collectionSort.value;
+
+        const sortedCards =
+            [...collectionCards].sort((a, b) => {
+
+                if (sortValue === 'name-asc') {
+                    return a.dataset.name.localeCompare(
+                        b.dataset.name
+                    );
+                }
+
+                if (sortValue === 'name-desc') {
+                    return b.dataset.name.localeCompare(
+                        a.dataset.name
+                    );
+                }
+
+                if (sortValue === 'newest') {
+                    return Number(b.dataset.created) -
+                        Number(a.dataset.created);
+                }
+
+                if (sortValue === 'oldest') {
+                    return Number(a.dataset.created) -
+                        Number(b.dataset.created);
+                }
+
+                if (sortValue === 'quantity-desc') {
+                    return Number(b.dataset.quantity) -
+                        Number(a.dataset.quantity);
+                }
+
+                return 0;
+            });
+
+        for (const card of sortedCards) {
+            collectionGrid.appendChild(card);
+        }
+    }
+
+
+    // Runs the same filtering function whenever any filter changes.
+    collectionSearch.addEventListener(
+        'input',
+        filterCollection
+    );
+
+    colorFilters.forEach(input => {
+        input.addEventListener(
+            'change',
+            filterCollection
+        );
+    });
+
+    colorlessFilter.addEventListener(
+        'change',
+        filterCollection
+    );
+
+    typeFilter.addEventListener(
+        'change',
+        filterCollection
+    );
+
+    rarityFilter.addEventListener(
+        'change',
+        filterCollection
+    );
+
+    finishFilter.addEventListener(
+        'change',
+        filterCollection
+    );
+
+    collectionSort.addEventListener(
+        'change',
+        sortCollection
+    );
 </script>

@@ -1,0 +1,123 @@
+<!-- Card Details Modal -->
+<div
+    class="modal fade"
+    id="cardDetailsModal"
+    tabindex="-1"
+    aria-labelledby="cardDetailsModalLabel"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h2
+                    class="modal-title fs-4"
+                    id="cardDetailsModalLabel"
+                >
+                    Card Details
+                </h2>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="card mb-3">
+                    <div class="row g-0">
+
+                        <!-- Card image and quantity control. -->
+                        <div class="col-md-4">
+                            <div class="image-wrapper">
+
+                                <img
+                                    id="detailsCardImage"
+                                    class="img-fluid rounded-start"
+                                    alt="Selected card"
+                                >
+
+                                <form
+                                    id="detailsQuantityForm"
+                                    method="POST"
+                                    class="quantity-overlay position-absolute top-0 end-0 m-2"
+                                >
+                                    <input
+                                        class="quantity-input form-control form-control-sm bg-black text-white border-secondary text-center"
+                                        type="number"
+                                        id="detailsQuantity"
+                                        name="quantity"
+                                        min="1"
+                                        step="1"
+                                    >
+                                </form>
+
+                            </div>
+                        </div>
+
+                        <!-- Card information and controls. -->
+                        <div class="col-md-8">
+                            <div class="card-body d-flex flex-column h-100">
+
+                                <h2
+                                    class="card-title"
+                                    id="detailsCardTitle"
+                                ></h2>
+
+                                <br>
+
+                                <p
+                                    class="card-text"
+                                    id="detailsCardTypeLine"
+                                ></p>
+
+                                <br>
+
+                                <p
+                                    class="card-text oracle-text"
+                                    id="detailsCardOracleText"
+                                ></p>
+
+                                <div class="mt-auto d-flex flex-column align-items-end">
+
+                                    <div class="d-flex gap-2 mb-2">
+
+                                        <a
+                                            class="btn btn-info"
+                                            id="detailsEditButton"
+                                            href="#"
+                                        >
+                                            Edit
+                                        </a>
+
+                                        <form
+                                            id="detailsDeleteForm"
+                                            method="POST"
+                                        >
+                                            <button class="btn btn-danger">
+                                                Delete
+                                            </button>
+                                        </form>
+
+                                    </div>
+
+                                    <small
+                                        class="text-body-secondary"
+                                        id="detailsCardSet"
+                                    ></small>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>

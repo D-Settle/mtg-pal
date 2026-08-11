@@ -32,6 +32,12 @@ app.use(express.urlencoded({ extended: true}));
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Makes the current request path available to all EJS views.
+app.use((req, res, next) => {
+    res.locals.currentPath = req.path;
+    next();
+});
+
 app.get('/', (req, res) => {
     res.render('home')
 })
@@ -43,10 +49,6 @@ app.get('/cards', catchAsync(async (req, res) => {
     res.render('cards/index', { cards });
 }))
 
-// This is to show the new view to add a new card to the card collection
-app.get('/cards/new', (req, res) => {
-    res.render('cards/new');
-})
 
 // Middleware that retrieves card name suggestions from the Scryfall API.
 // Used to provide live autocomplete while the user types a card name.
@@ -114,6 +116,63 @@ app.get('/cards/scryfall-card', catchAsync(async (req, res) => {
     res.json(card);
 }))
 
+app.get('/cards/printings/:oracleId', catchAsync(async (req, res) => {
+    const { oracleId } = req.params;
+
+    const query = encodeURIComponent(`oracleid:${oracleId}`);
+
+    const response = await fetch(
+        `https://api.scryfall.com/cards/search?unique=prints&order=released&q=${query}`,
+        {
+            headers: {
+                'User-Agent': 'mtg-pal/1.0',
+                'Accept': 'application/json'
+            }
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        const error = new Error(
+            data.details || 'Unable to load card printings.'
+        );
+
+        error.statusCode = response.status;
+        throw error;
+    }
+
+    res.json(data.data);
+}))
+
+// Middleware that retrieves one specific card printing using its Scryfall ID.
+app.get('/cards/printing/:scryfallId', catchAsync(async (req, res) => {
+    const { scryfallId } = req.params;
+
+    const response = await fetch(
+        `https://api.scryfall.com/cards/${encodeURIComponent(scryfallId)}`,
+        {
+            headers: {
+                'User-Agent': 'mtg-pal/1.0',
+                'Accept': 'application/json'
+            }
+        }
+    );
+
+    const card = await response.json();
+
+    if (!response.ok) {
+        const error = new Error(
+            card.details || 'Unable to load that printing.'
+        );
+
+        error.statusCode = response.status;
+        throw error;
+    }
+
+    res.json(card);
+}))
+
 // SCRYFALL TESTING MIDDLEWARE
 /*
 app.get('/scryfall-test', catchAsync(async (req, res) => {
@@ -123,20 +182,36 @@ app.get('/scryfall-test', catchAsync(async (req, res) => {
 }))
 */
 
-// This is a Post function to add a new card to the collection.  it takes a form with multiple inputs and creates a new card object in the database
+// Adds a new card to the collection.
+// If the exact printing and finish already exist, its quantity is increased instead.
 app.post("/cards", catchAsync(async (req, res) => {
     const cardData = buildCardData(req);
+
+    const existingCard = await Card.findOne({
+        scryfallId: cardData.scryfallId,
+        finish: cardData.finish
+    });
+
+    if (existingCard) {
+        existingCard.quantity += Number(cardData.quantity);
+
+        await existingCard.save();
+
+        return res.redirect('/cards');
+    }
 
     const card = new Card(cardData);
     await card.save();
 
-    res.redirect(`/cards/${card._id}`);
+    res.redirect('/cards');
 }));
 
-// This is to show the show view that shows all relevant information of the card you chose (each card is a link to their respected show page)
-app.get('/cards/:id', catchAsync(async (req, res) => {
+// Middleware that returns one card as JSON.
+// Used to populate the card details modal on the collection page.
+app.get('/cards/:id/data', catchAsync(async (req, res) => {
     const card = await findCardOrThrow(req.params.id);
-    res.render('cards/show', { card });
+
+    res.json(card);
 }))
 
 // This is to show the edit view for an existing card.
