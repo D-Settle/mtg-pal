@@ -1,0 +1,217 @@
+<!-- Edit Card Modal -->
+<div
+    class="modal fade"
+    id="editCardModal"
+    tabindex="-1"
+    aria-labelledby="editCardModalLabel"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <form id="editCardModalForm">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h2
+                        class="modal-title fs-5"
+                        id="editCardModalLabel"
+                    >
+                        Edit Card
+                    </h2>
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                    ></button>
+                </div>
+
+
+                <!-- Modal Body -->
+                <div class="modal-body">
+
+                    <!-- Card name - read only -->
+                    <div class="mb-3">
+                        <label
+                            class="form-label"
+                            for="editCardName"
+                        >
+                            Card Name
+                        </label>
+
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="editCardName"
+                            readonly
+                        >
+                    </div>
+
+
+                    <!-- Editable fields -->
+                    <div class="row mb-3">
+
+                        <!-- Printing -->
+                        <div class="col">
+                            <label
+                                class="form-label"
+                                for="editPrinting"
+                            >
+                                Printing
+                            </label>
+
+                            <select
+                                class="form-select"
+                                id="editPrinting"
+                            >
+                                <option value="">
+                                    Loading printings...
+                                </option>
+                            </select>
+                        </div>
+
+
+                        <!-- Finish -->
+                        <div class="col">
+                            <label
+                                class="form-label"
+                                for="editFinish"
+                            >
+                                Finish
+                            </label>
+
+                            <select
+                                class="form-select"
+                                id="editFinish"
+                            >
+                                <option value="">
+                                    Select a printing
+                                </option>
+                            </select>
+                        </div>
+
+
+                        <!-- Quantity -->
+                        <div class="col-auto">
+                            <label
+                                class="form-label"
+                                for="editQuantity"
+                            >
+                                Quantity
+                            </label>
+
+                            <input
+                                class="form-control bg-black text-white border-secondary text-center"
+                                type="number"
+                                id="editQuantity"
+                                value="1"
+                                min="1"
+                                step="1"
+                                style="width: 85px;"
+                            >
+                        </div>
+
+                    </div>
+
+
+                    <!-- Card Preview -->
+                    <div class="card mb-3">
+
+                        <div class="row g-0">
+
+                            <!-- Card Image -->
+                            <div class="col-md-4">
+
+                                <div id="editCardImageWrapper">
+
+                                    <img
+                                        id="editCardImage"
+                                        class="img-fluid rounded-start"
+                                        alt="Card preview"
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Card Information -->
+                            <div class="col-md-8">
+
+                                <div class="card-body">
+
+                                    <!-- Name and Mana Cost -->
+                                    <div
+                                        class="d-flex align-items-center justify-content-between mb-2"
+                                    >
+                                        <h3
+                                            class="card-title mb-0"
+                                            id="editCardTitle"
+                                        ></h3>
+
+                                        <div
+                                            class="mana-cost"
+                                            id="editCardManaCost"
+                                        ></div>
+                                    </div>
+
+
+                                    <!-- Type Line -->
+                                    <p
+                                        class="card-text"
+                                        id="editCardTypeLine"
+                                    ></p>
+
+
+                                    <!-- Oracle Text -->
+                                    <p
+                                        class="card-text oracle-text"
+                                        id="editCardOracleText"
+                                    ></p>
+
+
+                                    <!-- Set Information -->
+                                    <small
+                                        class="text-body-secondary"
+                                        id="editCardSet"
+                                    ></small>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success"
+                        id="editCardSaveButton"
+                    >
+                        Save Changes
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>

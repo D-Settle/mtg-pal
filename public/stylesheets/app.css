@@ -27,7 +27,7 @@
 }
 
 .oracle-text {
-    white-space: pre-wrap;
+    white-space: pre-line;
 }
 
 
@@ -87,4 +87,26 @@
     width: 24px;
     height: 24px;
     object-fit: contain;
+    display: block;
+}
+
+.mana-cost {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 1rem;
+    flex-shrink: 0;
+}
+
+.mana-cost .mana-symbol-inline {
+    width: 26px;
+    height: 26px;
+}
+
+.mana-symbol-inline {
+    width: 1.15em;
+    height: 1.15em;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: -0.15em;
 }

@@ -266,6 +266,7 @@
 
 <%- include('addCardModal') %>
 <%- include('cardDetailsModal') %>
+<%- include('editCardModal') %>
 
 <script>
     // QUANTITY UPDATES
@@ -315,6 +316,11 @@
 
 
     // ADD CARD MODAL
+    const addCardModal =
+        document.querySelector('#addCardModal');
+
+    const addCardModalForm =
+        document.querySelector('#addCardModalForm');
 
     const modalCardNameInput =
         document.querySelector('#modalCardName');
@@ -339,6 +345,9 @@
 
     const modalCardTitle =
         document.querySelector('#modalCardTitle');
+
+    const modalCardManaCost =
+        document.querySelector('#modalCardManaCost');
 
     const modalCardTypeLine =
         document.querySelector('#modalCardTypeLine');
@@ -602,13 +611,16 @@
             card.image_uris?.display || '';
 
         modalCardTitle.textContent =
-            `${card.name} ${card.mana_cost || ''}`;
+            card.name || '';
+
+        modalCardManaCost.innerHTML =
+            renderManaSymbols(card.mana_cost || '');
 
         modalCardTypeLine.textContent =
             card.type_line || '';
 
-        modalCardOracleText.textContent =
-            card.oracle_text || '';
+        modalCardOracleText.innerHTML =
+            renderManaSymbols(card.oracle_text || '');
 
         modalCardSet.textContent =
             `${card.set_name || ''} ` +
@@ -692,6 +704,49 @@
             value.slice(1);
     }
 
+    // Resets the Add Card modal whenever it is closed.
+    addCardModal.addEventListener('hidden.bs.modal', () => {
+        addCardModalForm.reset();
+
+        modalCardSuggestions.innerHTML = '';
+
+        modalCardDetails.classList.add('d-none');
+
+        modalPrinting.innerHTML = `
+            <option value="">
+                Select a card first
+            </option>
+        `;
+
+        modalPrinting.disabled = true;
+
+        modalFinish.innerHTML = `
+            <option value="">
+                Select a printing first
+            </option>
+        `;
+
+        modalFinish.disabled = true;
+
+        modalCardImage.removeAttribute('src');
+
+        modalCardTitle.textContent = '';
+
+        modalCardManaCost.innerHTML = '';
+
+        modalCardTypeLine.textContent = '';
+
+        modalCardOracleText.innerHTML = '';
+
+        modalCardSet.textContent = '';
+
+        modalColors.innerHTML = '';
+
+        modalColorIdentity.innerHTML = '';
+
+        modalAddCardButton.disabled = true;
+    });
+
 
     // CARD DETAILS MODAL
 
@@ -700,6 +755,9 @@
 
     const detailsCardTitle =
         document.querySelector('#detailsCardTitle');
+
+    const detailsManaCost =
+        document.querySelector('#detailsManaCost');
 
     const detailsCardTypeLine =
         document.querySelector('#detailsCardTypeLine');
@@ -751,6 +809,8 @@
 
     // Populates the Card Details modal with information from MongoDB.
     function fillCardDetailsModal(card) {
+        currentDetailsCard = card;
+
         detailsCardImage.src =
             card.imageUrl || '';
 
@@ -758,13 +818,16 @@
             card.name || 'Selected card';
 
         detailsCardTitle.textContent =
-            `${card.name} ${card.manaCost || ''}`;
+            card.name;
+
+        detailsManaCost.innerHTML =
+            renderManaSymbols(card.manaCost || '');
 
         detailsCardTypeLine.textContent =
             card.typeLine || '';
 
-        detailsCardOracleText.textContent =
-            card.oracleText || '';
+        detailsCardOracleText.innerHTML =
+            renderManaSymbols(card.oracleText || '');
 
         detailsCardSet.textContent =
             `${card.setName || ''} ` +
@@ -780,12 +843,215 @@
         detailsQuantityForm.action =
             `/cards/${card._id}/quantity?_method=PATCH`;
 
-        detailsEditButton.href =
-            `/cards/${card._id}/edit`;
-
         detailsDeleteForm.action =
             `/cards/${card._id}?_method=DELETE`;
     }
+
+    async function fillEditCardModal(card) {
+        editCardName.value =
+            card.name || '';
+
+        editQuantity.value =
+            card.quantity || 1;
+
+        editCardImage.src =
+            card.imageUrl || '';
+
+        editCardImage.alt =
+            card.name || 'Card preview';
+
+        editCardTitle.textContent =
+            card.name || '';
+
+        editCardManaCost.innerHTML =
+            renderManaSymbols(card.manaCost || '');
+
+        editCardTypeLine.textContent =
+            card.typeLine || '';
+
+        editCardOracleText.innerHTML =
+            renderManaSymbols(card.oracleText || '');
+
+        editCardSet.textContent =
+            `${card.setName || ''} ` +
+            `${card.setCode ? `(${card.setCode.toUpperCase()})` : ''} ` +
+            `${card.collectorNumber ? `#${card.collectorNumber}` : ''}`;
+
+        await loadEditPrintings(
+            card.oracleId,
+            card.scryfallId
+        );
+
+        await loadCurrentEditFinish(card);
+    }
+
+    // Loads all available printings for the card being edited.
+    async function loadEditPrintings(
+        oracleId,
+        selectedScryfallId
+    ) {
+        editPrinting.innerHTML = '';
+        editPrinting.disabled = true;
+
+        try {
+            const response = await fetch(
+                `/cards/printings/${encodeURIComponent(oracleId)}`
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Unable to load card printings.'
+                );
+            }
+
+            const printings = await response.json();
+
+            for (const printing of printings) {
+                const option =
+                    document.createElement('option');
+
+                option.value =
+                    printing.id;
+
+                option.textContent =
+                    `${printing.set_name} ` +
+                    `(${printing.set.toUpperCase()}) ` +
+                    `#${printing.collector_number}`;
+
+                option.selected =
+                    printing.id === selectedScryfallId;
+
+                editPrinting.appendChild(option);
+            }
+
+            editPrinting.disabled = false;
+
+        } catch (error) {
+            console.error(error);
+
+            editPrinting.innerHTML =
+                '<option value="">Unable to load printings</option>';
+        }
+    }
+
+    // Loads the valid finishes for the card's current printing.
+    async function loadCurrentEditFinish(card) {
+        try {
+            const response = await fetch(
+                `/cards/printing/${encodeURIComponent(card.scryfallId)}`
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Unable to load printing information.'
+                );
+            }
+
+            const printing = await response.json();
+
+            selectedEditPrinting = printing;
+
+            fillEditFinishes(
+                printing.finishes || [],
+                card.finish
+            );
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    // Populates the Edit Card finish dropdown and selects the current finish.
+    function fillEditFinishes(
+        finishes,
+        selectedFinish = ''
+    ) {
+        editFinish.innerHTML = '';
+
+        for (const finish of finishes) {
+            const option =
+                document.createElement('option');
+
+            option.value = finish;
+
+            option.textContent =
+                finish.charAt(0).toUpperCase() +
+                finish.slice(1);
+
+            option.selected =
+                finish === selectedFinish;
+
+            editFinish.appendChild(option);
+        }
+    }
+
+    // Updates the Edit Card preview when a different printing is selected.
+    function fillEditPrintingPreview(card) {
+        selectedEditPrinting = card;
+
+        editCardImage.src =
+            card.image_uris?.display || '';
+
+        editCardImage.alt =
+            card.name || 'Card preview';
+
+        editCardTitle.textContent =
+            card.name || '';
+
+        editCardManaCost.innerHTML =
+            renderManaSymbols(card.mana_cost || '');
+
+        editCardTypeLine.textContent =
+            card.type_line || '';
+
+        editCardOracleText.innerHTML =
+            renderManaSymbols(card.oracle_text || '');
+
+        editCardSet.textContent =
+        `${card.set_name || ''} ` +
+            `(${(card.set || '').toUpperCase()}) ` +
+            `#${card.collector_number || ''}`;
+
+        fillEditFinishes(
+            card.finishes || []
+        );
+    }
+
+    // Opens the Edit Card modal using the card currently shown in Card Details.
+    detailsEditButton.addEventListener('click', async () => {
+        if (!currentDetailsCard) {
+            return;
+        }
+
+        try {
+            await fillEditCardModal(currentDetailsCard);
+
+            const detailsModal =
+                bootstrap.Modal.getInstance(
+                    document.querySelector('#cardDetailsModal')
+                );
+
+            detailsModal.hide();
+
+            document
+                .querySelector('#cardDetailsModal')
+                .addEventListener(
+                    'hidden.bs.modal',
+                    () => {
+                        const editModal =
+                            bootstrap.Modal.getOrCreateInstance(
+                                editCardModalElement
+                            );
+
+                        editModal.show();
+                    },
+                    { once: true }
+                );
+
+        } catch (error) {
+            console.error(error);
+        }
+    });
 
 
     // Prevents the Card Details quantity form from navigating to JSON.
@@ -832,6 +1098,137 @@
 
             detailsQuantity.value =
                 previousQuantity;
+        }
+    });
+
+    // EDIT CARD MODAL
+
+    const editCardModalElement =
+        document.querySelector('#editCardModal');
+
+    const editCardModalForm =
+        document.querySelector('#editCardModalForm');
+
+    const editCardName =
+        document.querySelector('#editCardName');
+
+    const editPrinting =
+        document.querySelector('#editPrinting');
+
+    const editFinish =
+        document.querySelector('#editFinish');
+
+    const editQuantity =
+        document.querySelector('#editQuantity');
+
+    const editCardImage =
+        document.querySelector('#editCardImage');
+
+    const editCardTitle =
+        document.querySelector('#editCardTitle');
+
+    const editCardManaCost =
+        document.querySelector('#editCardManaCost');
+
+    const editCardTypeLine =
+        document.querySelector('#editCardTypeLine');
+
+    const editCardOracleText =
+        document.querySelector('#editCardOracleText');
+
+    const editCardSet =
+        document.querySelector('#editCardSet');
+
+    const editCardSaveButton =
+        document.querySelector('#editCardSaveButton');
+
+    let currentDetailsCard = null;
+
+    let selectedEditPrinting = null;
+
+
+    // Updates the Edit Card preview when a different printing is selected.
+    editPrinting.addEventListener('change', async () => {
+        const scryfallId = editPrinting.value;
+
+        if (!scryfallId) {
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `/cards/printing/${encodeURIComponent(scryfallId)}`
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Unable to load selected printing.'
+                );
+            }
+
+            const card = await response.json();
+
+            fillEditPrintingPreview(card);
+
+        } catch (error) {
+            console.error(error);
+        }
+    });
+
+    // Saves printing, finish, and quantity changes for the current card.
+    editCardModalForm.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        if (
+            !currentDetailsCard ||
+            !selectedEditPrinting
+        ) {
+            return;
+        }
+
+        try {
+            editCardSaveButton.disabled = true;
+
+            const body = new URLSearchParams();
+
+            body.append(
+                'scryfallId',
+                selectedEditPrinting.id
+            );
+
+            body.append(
+                'finish',
+                editFinish.value
+            );
+
+            body.append(
+                'quantity',
+                editQuantity.value
+            );
+
+            const response = await fetch(
+                `/cards/${encodeURIComponent(currentDetailsCard._id)}?_method=PATCH`,
+                {
+                    method: 'POST',
+                    body,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Unable to save card changes.'
+                );
+            }
+
+            window.location.href = '/cards';
+
+        } catch (error) {
+            console.error(error);
+
+            editCardSaveButton.disabled = false;
         }
     });
 
@@ -1008,6 +1405,66 @@
         for (const card of sortedCards) {
             collectionGrid.appendChild(card);
         }
+    }
+
+    // Converts MTG symbol notation into mana symbol images for display.
+    function renderManaSymbols(text = '') {
+        const symbols = {
+            W: '/images/mana/W.svg',
+            U: '/images/mana/U.svg',
+            B: '/images/mana/B.svg',
+            R: '/images/mana/R.svg',
+            G: '/images/mana/G.svg',
+            C: '/images/mana/C.svg',
+            T: '/images/mana/T.svg',
+            Q: '/images/mana/Q.svg',
+
+            X: '/images/mana/X.svg',
+            Y: '/images/mana/Y.svg',
+
+            0: '/images/mana/0.svg',
+            1: '/images/mana/1.svg',
+            2: '/images/mana/2.svg',
+            3: '/images/mana/3.svg',
+            4: '/images/mana/4.svg',
+            5: '/images/mana/5.svg',
+            6: '/images/mana/6.svg',
+            7: '/images/mana/7.svg',
+            8: '/images/mana/8.svg',
+            9: '/images/mana/9.svg',
+            10: '/images/mana/10.svg',
+            11: '/images/mana/11.svg',
+            12: '/images/mana/12.svg',
+            13: '/images/mana/13.svg',
+            14: '/images/mana/14.svg',
+            15: '/images/mana/15.svg',
+            16: '/images/mana/16.svg',
+            17: '/images/mana/17.svg',
+            18: '/images/mana/18.svg',
+            19: '/images/mana/19.svg',
+            20: '/images/mana/20.svg',
+
+            'W/U': '/images/mana/WU.svg',
+            'W/B': '/images/mana/WB.svg',
+            'U/B': '/images/mana/UB.svg',
+            'U/R': '/images/mana/UR.svg',
+            'B/R': '/images/mana/BR.svg',
+            'B/G': '/images/mana/BG.svg',
+            'R/G': '/images/mana/RG.svg',
+            'R/W': '/images/mana/RW.svg',
+            'G/W': '/images/mana/GW.svg',
+            'G/U': '/images/mana/GU.svg'
+        };
+
+        return text.replace(/\{([^}]+)\}/g, (match, symbol) => {
+            const imageUrl = symbols[symbol];
+
+            if (!imageUrl) {
+                return match;
+            }
+
+            return `<img src="${imageUrl}" alt="{${symbol}}" class="mana-symbol-inline">`;
+        });
     }
 
 

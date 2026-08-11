@@ -173,15 +173,6 @@ app.get('/cards/printing/:scryfallId', catchAsync(async (req, res) => {
     res.json(card);
 }))
 
-// SCRYFALL TESTING MIDDLEWARE
-/*
-app.get('/scryfall-test', catchAsync(async (req, res) => {
-    const card = await fetchCardFromScryfall('Sol Ring');
-
-    res.json(card);
-}))
-*/
-
 // Adds a new card to the collection.
 // If the exact printing and finish already exist, its quantity is increased instead.
 app.post("/cards", catchAsync(async (req, res) => {
@@ -214,26 +205,164 @@ app.get('/cards/:id/data', catchAsync(async (req, res) => {
     res.json(card);
 }))
 
-// This is to show the edit view for an existing card.
-app.get('/cards/:id/edit', catchAsync(async (req, res) => {
-    const card = await findCardOrThrow(req.params.id);
-    res.render('cards/edit', { card });
-}))
-
-// Middleware that updates all editable information for an existing card.
-// Mongoose validators are run before the updated information is saved.
-app.put("/cards/:id", catchAsync(async (req, res) => {
+// Updates a card's printing, finish, and quantity.
+// Card information is refreshed from the selected Scryfall printing.
+app.patch('/cards/:id', catchAsync(async (req, res) => {
     const { id } = req.params;
 
     await findCardOrThrow(id);
 
-    const cardData = buildCardData(req);
+    const scryfallId =
+        (req.body.scryfallId || '').trim();
 
-    await Card.findByIdAndUpdate(id, cardData, {
-        runValidators: true
+    const finish =
+        (req.body.finish || '').trim();
+
+    const quantity =
+        Number(req.body.quantity);
+
+    if (!scryfallId) {
+        const error =
+            new Error('Scryfall printing ID is required.');
+
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const response = await fetch(
+        `https://api.scryfall.com/cards/${encodeURIComponent(scryfallId)}`,
+        {
+            headers: {
+                'User-Agent': 'mtg-pal/1.0',
+                'Accept': 'application/json'
+            }
+        }
+    );
+
+    const printing = await response.json();
+
+    if (!response.ok) {
+        const error = new Error(
+            printing.details ||
+            'Unable to load selected printing.'
+        );
+
+        error.statusCode = response.status;
+        throw error;
+    }
+
+    const parts =
+        (printing.type_line || '')
+            .split(/\s+[—–-]\s+/);
+
+    const leftWords =
+        (parts[0] || '')
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+    const rightWords =
+        (parts[1] || '')
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+    const supertypes =
+        leftWords.filter(word =>
+            SUPERTYPES.includes(word)
+        );
+
+    const cardTypes =
+        leftWords.filter(word =>
+            !SUPERTYPES.includes(word)
+        );
+
+    const cardData = {
+        name: printing.name,
+
+        scryfallId: printing.id,
+        oracleId: printing.oracle_id,
+
+        setCode: printing.set,
+        setName: printing.set_name,
+        collectorNumber:
+            printing.collector_number,
+
+        manaCost:
+            printing.mana_cost || '',
+
+        typeLine:
+            printing.type_line || '',
+
+        supertypes,
+        cardTypes,
+        subtypes: rightWords,
+
+        oracleText:
+            printing.oracle_text || '',
+
+        colors:
+            printing.colors || [],
+
+        colorIdentity:
+            printing.color_identity || [],
+
+        rarity:
+            printing.rarity
+                ? printing.rarity
+                    .charAt(0)
+                    .toUpperCase() +
+                  printing.rarity.slice(1)
+                : undefined,
+
+        quantity,
+        finish,
+
+        imageUrl:
+            printing.image_uris?.display || ''
+    };
+
+    // Checks whether another collection entry already uses
+    // the selected printing and finish.
+    const existingCard = await Card.findOne({
+        _id: { $ne: id },
+        scryfallId: printing.id,
+        finish
     });
 
-    res.redirect(`/cards/${id}`);
+
+    // If the selected printing/finish already exists,
+    // merge the quantities and remove the card being edited.
+    if (existingCard) {
+        existingCard.quantity += quantity;
+
+        await existingCard.save();
+
+        await Card.findByIdAndDelete(id);
+
+        return res.json({
+            success: true,
+            merged: true,
+            cardId: existingCard._id
+        });
+    }
+
+
+    // Otherwise, update the current card normally.
+    const updatedCard = await Card.findByIdAndUpdate(
+        id,
+        cardData,
+        {
+            runValidators: true,
+            returnDocument: 'after'
+        }
+    );
+
+    res.json({
+        success: true,
+        merged: false,
+        cardId: updatedCard._id
+    });
 }));
 
 // Middleware that updates only the quantity of an existing card.
@@ -373,34 +502,6 @@ app.use((err, req, res, next) => {
 
     res.status(statusCode).send(message);
 });
-
-
-// Helper function that retrieves card information from the Scryfall API.
-// Throws an error if Scryfall cannot find or return the requested card.
-async function fetchCardFromScryfall(cardName) {
-    const response = await fetch(
-        `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`,
-        {
-            headers: {
-                'User-Agent': 'mtg-pal/1.0',
-                'Accept': 'application/json'
-            }
-        }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        const error = new Error(
-            data.details || 'Unable to find that card on Scryfall.'
-        );
-
-        error.statusCode = response.status;
-        throw error;
-    }
-
-    return data;
-}
 
 app.listen(3000, () => {
     console.log('Hello There!');
