@@ -2,7 +2,13 @@
 
 A full-stack web application for managing a personal Magic: The Gathering card collection.
 
-Built using **Node.js**, **Express**, **EJS**, **MongoDB**, **Mongoose**, **Bootstrap**, and the **Scryfall API**, this application allows users to search for Magic cards, select specific printings and finishes, add them to a personal collection, and manage their collection through an interactive interface.
+Built using **Node.js**, **Express**, **EJS**, **MongoDB Atlas**, **Mongoose**, **Bootstrap**, and the **Scryfall API**, this application allows users to search for Magic cards, select specific printings and finishes, add them to a collection, and manage their collection through an interactive interface.
+
+## Live Demo
+
+**https://mtg-pal.onrender.com**
+
+> MTG Pal is currently a shared single-user/demo application. Changes made to the collection are visible to all visitors.
 
 ---
 
@@ -121,7 +127,7 @@ This information will also support Commander deck validation in future versions 
 
 - Node.js
 - Express.js
-- MongoDB
+- MongoDB Atlas
 - Mongoose
 
 ### Frontend
@@ -135,9 +141,16 @@ This information will also support Commander deck validation in future versions 
 
 - Scryfall REST API
 
+### Deployment
+
+- Render
+- MongoDB Atlas
+
 ---
 
-## Installation
+## Local Installation
+
+The deployed application can be used directly through the live demo above. The following instructions are for running MTG Pal locally.
 
 Clone the repository:
 
@@ -157,24 +170,16 @@ Install dependencies:
 npm install
 ```
 
-Start MongoDB locally.
+Create a `.env` file in the project root and add your MongoDB connection string:
 
-Optionally seed the database with sample cards:
-
-```bash
-node seeds/index.js
+```env
+DB_URL=your_mongodb_connection_string
 ```
 
 Run the application:
 
 ```bash
-node app.js
-```
-
-Or with Nodemon:
-
-```bash
-nodemon app.js
+npm start
 ```
 
 Visit:
@@ -194,6 +199,7 @@ http://localhost:3000
 ├── public/
 ├── seeds/
 ├── app.js
+├── package.json
 └── README.md
 ```
 
@@ -203,7 +209,7 @@ http://localhost:3000
 
 - ✅ Full CRUD operations
 - ✅ RESTful routing
-- ✅ MongoDB persistence
+- ✅ MongoDB Atlas cloud persistence
 - ✅ Live Scryfall autocomplete
 - ✅ Automatic card importing
 - ✅ Multiple printing selection
@@ -220,6 +226,7 @@ http://localhost:3000
 - ✅ Server-side validation
 - ✅ Centralized error handling
 - ✅ Dynamic client-side updates
+- ✅ Public deployment with Render
 
 ---
 
@@ -236,8 +243,8 @@ http://localhost:3000
 - Individual user decks
 - Collection statistics
 - Wishlist support
+- Card pricing
 - React frontend
-- Deployment
 
 ---
 
@@ -254,6 +261,9 @@ Some of the more interesting problems solved during development include:
 - Rendering Scryfall mana notation as graphical mana symbols throughout the interface.
 - Updating collection data dynamically without requiring full page reloads.
 - Implementing Mongoose validation and centralized Express error handling.
+- Migrating the application from a local MongoDB database to MongoDB Atlas for cloud persistence.
+- Configuring environment variables to keep database credentials outside source control.
+- Deploying the Node.js/Express application to Render and connecting the deployed application to MongoDB Atlas.
 
 ---
 
@@ -261,4 +271,4 @@ Some of the more interesting problems solved during development include:
 
 **Dan Settle**
 
-Built as a portfolio project while learning and applying full-stack web development with Node.js, Express, MongoDB, Mongoose, JavaScript, Bootstrap, and REST API integration.
+Built as a portfolio project while learning and applying full-stack web development with Node.js, Express, MongoDB, Mongoose, JavaScript, Bootstrap, REST API integration, and cloud deployment.
