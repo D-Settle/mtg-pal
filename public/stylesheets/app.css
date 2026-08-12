@@ -118,3 +118,11 @@
 .legality-table td {
     white-space: nowrap;
 }
+
+.footer-link {
+    color: inherit;
+}
+
+.footer-link:hover {
+    opacity: 0.8;
+}
