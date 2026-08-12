@@ -279,7 +279,7 @@
     });
 
     // Updates card quantities asynchronously so the collection page does not reload.
-    document.querySelectorAll('input[name="quantity"]').forEach(input => {
+    document.querySelectorAll('.quantity-overlay input[name="quantity"]').forEach(input => {
         input.addEventListener('change', async () => {
             const form = input.form;
 
@@ -355,11 +355,11 @@
     const modalCardOracleText =
         document.querySelector('#modalCardOracleText');
 
-    const modalCardSet =
-        document.querySelector('#modalCardSet');
-
     const modalScryfallId =
         document.querySelector('#modalScryfallId');
+
+    const modalCardLegalities =
+        document.querySelector('#modalCardLegalities');
 
     let modalDebounceTimer;
 
@@ -559,13 +559,13 @@
         modalCardOracleText.innerHTML =
             renderManaSymbols(card.oracle_text || '');
 
-        modalCardSet.textContent =
-            `${card.set_name || ''} ` +
-            `(${(card.set || '').toUpperCase()}) ` +
-            `#${card.collector_number || ''}`;
-
         fillModalFinishes(
             card.finishes || []
+        );
+
+        fillLegalityTable(
+            modalCardLegalities,
+            card.legalities || {}
         );
     }
 
@@ -635,12 +635,6 @@
 
         modalCardOracleText.innerHTML = '';
 
-        modalCardSet.textContent = '';
-
-        modalColors.innerHTML = '';
-
-        modalColorIdentity.innerHTML = '';
-
         modalAddCardButton.disabled = true;
     });
 
@@ -670,6 +664,12 @@
 
     const detailsQuantity =
         document.querySelector('#detailsQuantity');
+
+    const detailsCardLegalities =
+        document.querySelector('#detailsCardLegalities');
+
+    const detailsUpdatedAt =
+        document.querySelector('#detailsUpdatedAt');
 
     const detailsEditButton =
         document.querySelector('#detailsEditButton');
@@ -730,6 +730,16 @@
             `${card.setName || ''} ` +
             `${card.setCode ? `(${card.setCode.toUpperCase()})` : ''} ` +
             `${card.collectorNumber ? `#${card.collectorNumber}` : ''}`;
+
+        detailsUpdatedAt.textContent =
+            card.updatedAt
+                ? `Updated at: ${new Date(card.updatedAt).toLocaleString()}`
+                : '';
+
+        fillLegalityTable(
+            detailsCardLegalities,
+            card.legalities || {}
+        );
 
         detailsQuantity.value =
             card.quantity;
@@ -989,6 +999,29 @@
 
             detailsQuantity.defaultValue =
                 result.quantity;
+
+            const collectionCard =
+                document.querySelector(
+                    `.collection-card .card-details-button[data-card-id="${currentDetailsCard._id}"]`
+                )?.closest('.collection-card');
+
+            if (collectionCard) {
+                const collectionQuantityInput =
+                    collectionCard.querySelector(
+                        '.quantity-overlay input[name="quantity"]'
+                    );
+
+                if (collectionQuantityInput) {
+                    collectionQuantityInput.value =
+                        result.quantity;
+
+                    collectionQuantityInput.defaultValue =
+                        result.quantity;
+                }
+
+                collectionCard.dataset.quantity =
+                    result.quantity;
+            }
 
         } catch (error) {
             console.error(error);
@@ -1362,6 +1395,129 @@
 
             return `<img src="${imageUrl}" alt="{${symbol}}" class="mana-symbol-inline">`;
         });
+    }
+
+function fillLegalityTable(container, legalities) {
+    if (!container) {
+        console.error('Legality table container was not found.');
+        return;
+    }
+
+    const formats = [
+        ['Commander', 'commander'],
+        ['Standard', 'standard'],
+        ['Pioneer', 'pioneer'],
+        ['Modern', 'modern'],
+        ['Legacy', 'legacy'],
+        ['Vintage', 'vintage'],
+        ['Pauper', 'pauper']
+    ];
+
+    container.innerHTML = '';
+
+    const leftFormats =
+        formats.slice(0, 4);
+
+    const rightFormats =
+        formats.slice(4);
+
+    for (let i = 0; i < leftFormats.length; i++) {
+        const row =
+            document.createElement('tr');
+
+        // Left format.
+        const [leftLabel, leftKey] =
+            leftFormats[i];
+
+        const leftLegality =
+            legalities[leftKey] || 'not_legal';
+
+        const leftFormatCell =
+            document.createElement('td');
+
+        const leftLegalityCell =
+            document.createElement('td');
+
+        leftFormatCell.textContent =
+            leftLabel;
+
+        leftLegalityCell.textContent =
+            formatLegality(leftLegality);
+
+        leftLegalityCell.classList.add(
+            legalityClass(leftLegality)
+        );
+
+        row.appendChild(leftFormatCell);
+        row.appendChild(leftLegalityCell);
+
+
+        // Right format.
+        if (rightFormats[i]) {
+            const [rightLabel, rightKey] =
+                rightFormats[i];
+
+            const rightLegality =
+                legalities[rightKey] || 'not_legal';
+
+            const rightFormatCell =
+                document.createElement('td');
+
+            const rightLegalityCell =
+                document.createElement('td');
+
+            rightFormatCell.textContent =
+                rightLabel;
+
+            rightLegalityCell.textContent =
+                formatLegality(rightLegality);
+
+            rightLegalityCell.classList.add(
+                legalityClass(rightLegality)
+            );
+
+            row.appendChild(rightFormatCell);
+            row.appendChild(rightLegalityCell);
+
+        } else {
+            row.appendChild(
+                document.createElement('td')
+            );
+
+            row.appendChild(
+                document.createElement('td')
+            );
+        }
+
+        container.appendChild(row);
+    }
+}
+
+    function formatLegality(value) {
+        const labels = {
+            legal: 'Legal',
+            not_legal: 'Not Legal',
+            banned: 'Banned',
+            restricted: 'Restricted'
+        };
+
+        return labels[value] || value;
+    }
+
+    function legalityClass(value) {
+        if (value === 'legal') {
+            return 'text-success';
+        }
+
+        if (value === 'banned') {
+            return 'text-danger';
+        }
+
+        if (value === 'restricted') {
+            return 'text-warning';
+        }
+
+        return 'text-body-secondary';
     }
 
 

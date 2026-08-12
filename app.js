@@ -484,6 +484,9 @@ async function buildCardDataFromScryfall(
         colorIdentity:
             printing.color_identity || [],
 
+        legalities:
+            printing.legalities || {},
+
         rarity:
             printing.rarity
                 ? printing.rarity.charAt(0).toUpperCase() +

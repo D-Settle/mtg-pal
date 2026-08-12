@@ -110,3 +110,11 @@
     display: inline-block;
     vertical-align: -0.15em;
 }
+
+.legality-table {
+    width: 100%;
+}
+
+.legality-table td {
+    white-space: nowrap;
+}

@@ -84,6 +84,12 @@ const CardSchema = new Schema(
         default: []
     },
 
+    legalities: {
+        type: Map,
+        of: String,
+        default: {}
+    },
+
     rarity: {
         type: String,
         enum: {
