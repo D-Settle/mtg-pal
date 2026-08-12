@@ -361,42 +361,6 @@
     const modalScryfallId =
         document.querySelector('#modalScryfallId');
 
-    const modalOracleId =
-        document.querySelector('#modalOracleId');
-
-    const modalSetCode =
-        document.querySelector('#modalSetCode');
-
-    const modalSetName =
-        document.querySelector('#modalSetName');
-
-    const modalCollectorNumber =
-        document.querySelector('#modalCollectorNumber');
-
-    const modalManaCost =
-        document.querySelector('#modalManaCost');
-
-    const modalLeftType =
-        document.querySelector('#modalLeftType');
-
-    const modalRightType =
-        document.querySelector('#modalRightType');
-
-    const modalOracleTextInput =
-        document.querySelector('#modalOracleTextInput');
-
-    const modalRarity =
-        document.querySelector('#modalRarity');
-
-    const modalImageUrl =
-        document.querySelector('#modalImageUrl');
-
-    const modalColors =
-        document.querySelector('#modalColors');
-
-    const modalColorIdentity =
-        document.querySelector('#modalColorIdentity');
-
     let modalDebounceTimer;
 
 
@@ -576,36 +540,9 @@
         }
     }
 
-    // Fills the Add Card preview and hidden fields needed by POST /cards.
     function fillModalCardFields(card) {
-        modalScryfallId.value = card.id || '';
-        modalOracleId.value = card.oracle_id || '';
-        modalSetCode.value = card.set || '';
-        modalSetName.value = card.set_name || '';
-
-        modalCollectorNumber.value =
-            card.collector_number || '';
-
-        modalManaCost.value =
-            card.mana_cost || '';
-
-        modalOracleTextInput.value =
-            card.oracle_text || '';
-
-        modalRarity.value =
-            capitalizeModal(card.rarity || '');
-
-        modalImageUrl.value =
-            card.image_uris?.display || '';
-
-        const parts =
-            (card.type_line || '').split(/\s+[—–-]\s+/);
-
-        modalLeftType.value =
-            parts[0] || '';
-
-        modalRightType.value =
-            parts[1] || '';
+        modalScryfallId.value =
+            card.id || '';
 
         modalCardImage.src =
             card.image_uris?.display || '';
@@ -627,39 +564,9 @@
             `(${(card.set || '').toUpperCase()}) ` +
             `#${card.collector_number || ''}`;
 
-        fillModalArrayInputs(
-            modalColors,
-            'card[colors]',
-            card.colors || []
+        fillModalFinishes(
+            card.finishes || []
         );
-
-        fillModalArrayInputs(
-            modalColorIdentity,
-            'card[colorIdentity]',
-            card.color_identity || []
-        );
-
-        fillModalFinishes(card.finishes || []);
-    }
-
-    // Creates hidden inputs for array values like colors and color identity.
-    function fillModalArrayInputs(
-        container,
-        fieldName,
-        values
-    ) {
-        container.innerHTML = '';
-
-        for (const value of values) {
-            const input =
-                document.createElement('input');
-
-            input.type = 'hidden';
-            input.name = fieldName;
-            input.value = value;
-
-            container.appendChild(input);
-        }
     }
 
     // Populates the Finish dropdown with finishes supported by the selected printing.
@@ -692,16 +599,6 @@
         }
 
         modalFinish.disabled = false;
-    }
-
-    // Converts lowercase Scryfall rarity values to match the Mongoose enum.
-    function capitalizeModal(value) {
-        if (!value) {
-            return '';
-        }
-
-        return value.charAt(0).toUpperCase() +
-            value.slice(1);
     }
 
     // Resets the Add Card modal whenever it is closed.

@@ -175,43 +175,7 @@ app.get('/cards/printing/:scryfallId', catchAsync(async (req, res) => {
 
 // Adds a new card to the collection.
 // If the exact printing and finish already exist, its quantity is increased instead.
-app.post("/cards", catchAsync(async (req, res) => {
-    const cardData = buildCardData(req);
-
-    const existingCard = await Card.findOne({
-        scryfallId: cardData.scryfallId,
-        finish: cardData.finish
-    });
-
-    if (existingCard) {
-        existingCard.quantity += Number(cardData.quantity);
-
-        await existingCard.save();
-
-        return res.redirect('/cards');
-    }
-
-    const card = new Card(cardData);
-    await card.save();
-
-    res.redirect('/cards');
-}));
-
-// Middleware that returns one card as JSON.
-// Used to populate the card details modal on the collection page.
-app.get('/cards/:id/data', catchAsync(async (req, res) => {
-    const card = await findCardOrThrow(req.params.id);
-
-    res.json(card);
-}))
-
-// Updates a card's printing, finish, and quantity.
-// Card information is refreshed from the selected Scryfall printing.
-app.patch('/cards/:id', catchAsync(async (req, res) => {
-    const { id } = req.params;
-
-    await findCardOrThrow(id);
-
+app.post('/cards', catchAsync(async (req, res) => {
     const scryfallId =
         (req.body.scryfallId || '').trim();
 
@@ -229,110 +193,107 @@ app.patch('/cards/:id', catchAsync(async (req, res) => {
         throw error;
     }
 
-    const response = await fetch(
-        `https://api.scryfall.com/cards/${encodeURIComponent(scryfallId)}`,
-        {
-            headers: {
-                'User-Agent': 'mtg-pal/1.0',
-                'Accept': 'application/json'
-            }
-        }
-    );
+    if (
+        !Number.isInteger(quantity) ||
+        quantity < 1
+    ) {
+        const error =
+            new Error(
+                'Quantity must be a whole number of at least 1.'
+            );
 
-    const printing = await response.json();
-
-    if (!response.ok) {
-        const error = new Error(
-            printing.details ||
-            'Unable to load selected printing.'
-        );
-
-        error.statusCode = response.status;
+        error.statusCode = 400;
         throw error;
     }
 
-    const parts =
-        (printing.type_line || '')
-            .split(/\s+[—–-]\s+/);
-
-    const leftWords =
-        (parts[0] || '')
-            .trim()
-            .split(/\s+/)
-            .filter(Boolean);
-
-    const rightWords =
-        (parts[1] || '')
-            .trim()
-            .split(/\s+/)
-            .filter(Boolean);
-
-    const supertypes =
-        leftWords.filter(word =>
-            SUPERTYPES.includes(word)
+    const cardData =
+        await buildCardDataFromScryfall(
+            scryfallId,
+            finish,
+            quantity
         );
 
-    const cardTypes =
-        leftWords.filter(word =>
-            !SUPERTYPES.includes(word)
+    const existingCard = await Card.findOne({
+        scryfallId: cardData.scryfallId,
+        finish: cardData.finish
+    });
+
+    if (existingCard) {
+        existingCard.quantity += quantity;
+
+        await existingCard.save();
+
+        return res.redirect('/cards');
+    }
+
+    const card = new Card(cardData);
+
+    await card.save();
+
+    res.redirect('/cards');
+}));
+
+// Middleware that returns one card as JSON.
+// Used to populate the card details modal on the collection page.
+app.get('/cards/:id/data', catchAsync(async (req, res) => {
+    const card = await findCardOrThrow(req.params.id);
+
+    res.json(card);
+}))
+
+// Updates a card's printing, finish, and quantity.
+app.patch('/cards/:id', catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    await findCardOrThrow(id);
+
+    const scryfallId =
+        (req.body.scryfallId || '').trim();
+
+    const finish =
+        (req.body.finish || '').trim();
+
+    const quantity =
+        Number(req.body.quantity);
+
+    if (
+        !Number.isInteger(quantity) ||
+        quantity < 1
+    ) {
+        const error =
+            new Error(
+                'Quantity must be a whole number of at least 1.'
+            );
+
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (!scryfallId) {
+        const error =
+            new Error('Scryfall printing ID is required.');
+
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const cardData =
+        await buildCardDataFromScryfall(
+            scryfallId,
+            finish,
+            quantity
         );
-
-    const cardData = {
-        name: printing.name,
-
-        scryfallId: printing.id,
-        oracleId: printing.oracle_id,
-
-        setCode: printing.set,
-        setName: printing.set_name,
-        collectorNumber:
-            printing.collector_number,
-
-        manaCost:
-            printing.mana_cost || '',
-
-        typeLine:
-            printing.type_line || '',
-
-        supertypes,
-        cardTypes,
-        subtypes: rightWords,
-
-        oracleText:
-            printing.oracle_text || '',
-
-        colors:
-            printing.colors || [],
-
-        colorIdentity:
-            printing.color_identity || [],
-
-        rarity:
-            printing.rarity
-                ? printing.rarity
-                    .charAt(0)
-                    .toUpperCase() +
-                  printing.rarity.slice(1)
-                : undefined,
-
-        quantity,
-        finish,
-
-        imageUrl:
-            printing.image_uris?.display || ''
-    };
 
     // Checks whether another collection entry already uses
     // the selected printing and finish.
     const existingCard = await Card.findOne({
         _id: { $ne: id },
-        scryfallId: printing.id,
-        finish
+        scryfallId: cardData.scryfallId,
+        finish: cardData.finish
     });
 
-
-    // If the selected printing/finish already exists,
-    // merge the quantities and remove the card being edited.
+    // If it already exists, merge the quantities and
+    // remove the card being edited.
     if (existingCard) {
         existingCard.quantity += quantity;
 
@@ -346,7 +307,6 @@ app.patch('/cards/:id', catchAsync(async (req, res) => {
             cardId: existingCard._id
         });
     }
-
 
     // Otherwise, update the current card normally.
     const updatedCard = await Card.findByIdAndUpdate(
@@ -399,50 +359,6 @@ app.delete('/cards/:id', catchAsync(async (req, res) => {
     res.redirect('/cards');
 }))
 
-// Helper function that converts submitted form information into card data.
-// It builds the type line and separates supertypes, card types, and subtypes.
-function buildCardData(req) {
-    const leftWords = req.body.leftType
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean);
-
-    const rightWords = (req.body.rightType || "")
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean);
-
-    const supertypes = leftWords.filter(word =>
-        SUPERTYPES.includes(word)
-    );
-
-    const cardTypes = leftWords.filter(word =>
-        !SUPERTYPES.includes(word)
-    );
-
-    const typeLine =
-        leftWords.join(" ") +
-        (rightWords.length
-            ? ` — ${rightWords.join(" ")}`
-            : "");
-
-    const cardData = {
-        ...req.body.card,
-        typeLine,
-        supertypes,
-        cardTypes,
-        subtypes: rightWords,
-        colors: req.body.card.colors || [],
-        colorIdentity: req.body.card.colorIdentity || []
-    };
-
-    if (cardData.rarity === '') {
-        delete cardData.rarity;
-    }
-
-    return cardData;
-}
-
 // A higher-order function that returns another function
 // which acts as Express middleware for async route handlers.
 function catchAsync(fn) {
@@ -469,6 +385,117 @@ async function findCardOrThrow(id) {
     }
 
     return card;
+}
+
+// Builds a complete MongoDB card object from one exact Scryfall printing.
+async function buildCardDataFromScryfall(
+    scryfallId,
+    finish,
+    quantity
+) {
+    const response = await fetch(
+        `https://api.scryfall.com/cards/${encodeURIComponent(scryfallId)}`,
+        {
+            headers: {
+                'User-Agent': 'mtg-pal/1.0',
+                'Accept': 'application/json'
+            }
+        }
+    );
+
+    const printing = await response.json();
+
+    if (!response.ok) {
+        const error = new Error(
+            printing.details ||
+            'Unable to load selected printing.'
+        );
+
+        error.statusCode = response.status;
+        throw error;
+    }
+
+    if (
+        !printing.finishes ||
+        !printing.finishes.includes(finish)
+    ) {
+        const error =
+            new Error(
+                'The selected finish is not available for this printing.'
+            );
+
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const parts =
+        (printing.type_line || '')
+            .split(/\s+[—–-]\s+/);
+
+    const leftWords =
+        (parts[0] || '')
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+    const rightWords =
+        (parts[1] || '')
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+    const supertypes =
+        leftWords.filter(word =>
+            SUPERTYPES.includes(word)
+        );
+
+    const cardTypes =
+        leftWords.filter(word =>
+            !SUPERTYPES.includes(word)
+        );
+
+    return {
+        name: printing.name,
+
+        scryfallId: printing.id,
+        oracleId: printing.oracle_id,
+
+        setCode: printing.set,
+        setName: printing.set_name,
+        collectorNumber:
+            printing.collector_number,
+
+        manaCost:
+            printing.mana_cost || '',
+
+        typeLine:
+            printing.type_line || '',
+
+        supertypes,
+        cardTypes,
+        subtypes: rightWords,
+
+        oracleText:
+            printing.oracle_text || '',
+
+        colors:
+            printing.colors || [],
+
+        colorIdentity:
+            printing.color_identity || [],
+
+        rarity:
+            printing.rarity
+                ? printing.rarity.charAt(0).toUpperCase() +
+                  printing.rarity.slice(1)
+                : undefined,
+
+        quantity,
+        finish,
+
+        imageUrl:
+            printing.image_uris?.display || ''
+    };
 }
 
 // Middleware that catches requests to nonexistent routes
