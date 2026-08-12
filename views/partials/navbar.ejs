@@ -1,6 +1,14 @@
 <nav class="navbar sticky-top navbar-expand-lg navbar-dark" style="background-color: #1e3a8a;">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">Navbar</a>
+
+        <a class="navbar-brand" href="/">
+            <img
+                src="/images/MTGPal_favicon.png"
+                alt="MTG Pal"
+                width="40"
+                height="40"
+            >
+        </a>
 
         <button
             class="navbar-toggler"
@@ -16,8 +24,19 @@
 
         <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
             <div class="navbar-nav">
-                <a class="nav-link <%= currentPath === '/' ? 'fw-bold' : '' %>"href="/">Home</a>
-                <a class="nav-link <%= currentPath.startsWith('/cards') ? 'fw-bold' : '' %>"href="/cards">Your Collection</a>
+                <a
+                    class="nav-link <%= currentPath === '/' ? 'fw-bold' : '' %>"
+                    href="/"
+                >
+                    Home
+                </a>
+
+                <a
+                    class="nav-link <%= currentPath.startsWith('/cards') ? 'fw-bold' : '' %>"
+                    href="/cards"
+                >
+                    Your Collection
+                </a>
             </div>
         </div>
     </div>
