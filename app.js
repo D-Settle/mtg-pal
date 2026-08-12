@@ -81,7 +81,23 @@ app.get('/cards/autocomplete', catchAsync(async (req, res) => {
         throw error;
     }
 
-    res.json(data.data);
+    const filteredNames = data.data.filter(name => {
+        const faces = name.split(' // ');
+
+        if (faces.length === 2) {
+            const firstFace =
+                faces[0].trim().toLowerCase();
+
+            const secondFace =
+                faces[1].trim().toLowerCase();
+
+            return firstFace !== secondFace;
+        }
+
+        return true;
+    });
+
+    res.json(filteredNames);
 }))
 
 // Middleware that retrieves complete card information from the Scryfall API.
@@ -111,12 +127,30 @@ app.get('/cards/scryfall-card', catchAsync(async (req, res) => {
         const error = new Error(
             card.details || 'Unable to find that card.'
         );
+
         error.statusCode = response.status;
         throw error;
     }
 
+    const hasImage =
+        Boolean(card.image_uris?.normal) ||
+        Boolean(card.image_uris?.large) ||
+        Boolean(card.card_faces?.some(face =>
+            face.image_uris?.normal ||
+            face.image_uris?.large
+        ));
+
+    if (!hasImage) {
+        const error = new Error(
+            'That Scryfall entry does not have a usable card image.'
+        );
+
+        error.statusCode = 404;
+        throw error;
+    }
+
     res.json(card);
-}))
+}));
 
 app.get('/cards/printings/:oracleId', catchAsync(async (req, res) => {
     const { oracleId } = req.params;
@@ -478,7 +512,12 @@ async function buildCardDataFromScryfall(
         subtypes: rightWords,
 
         oracleText:
-            printing.oracle_text || '',
+            printing.oracle_text ||
+            printing.card_faces
+                ?.map(face => face.oracle_text || '')
+                .filter(Boolean)
+                .join('\n\n') ||
+            '',
 
         colors:
             printing.colors || [],
@@ -492,14 +531,23 @@ async function buildCardDataFromScryfall(
         rarity:
             printing.rarity
                 ? printing.rarity.charAt(0).toUpperCase() +
-                  printing.rarity.slice(1)
+                printing.rarity.slice(1)
                 : undefined,
 
         quantity,
         finish,
 
         imageUrl:
-            printing.image_uris?.display || ''
+            printing.image_uris?.normal ||
+            printing.image_uris?.large ||
+            printing.card_faces?.[0]?.image_uris?.normal ||
+            printing.card_faces?.[0]?.image_uris?.large ||
+            '',
+
+        backImageUrl:
+            printing.card_faces?.[1]?.image_uris?.normal ||
+            printing.card_faces?.[1]?.image_uris?.large ||
+            ''
     };
 }
 

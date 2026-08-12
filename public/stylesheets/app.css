@@ -126,3 +126,20 @@
 .footer-link:hover {
     opacity: 0.8;
 }
+
+.image-wrapper {
+    position: relative;
+}
+
+.card-flip-button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+
+.image-wrapper:hover .card-flip-button {
+    opacity: 1;
+}

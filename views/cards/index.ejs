@@ -343,6 +343,9 @@
     const modalCardImage =
         document.querySelector('#modalCardImage');
 
+    const modalFlipCardButton =
+        document.querySelector('#modalFlipCardButton');
+
     const modalCardTitle =
         document.querySelector('#modalCardTitle');
 
@@ -362,6 +365,8 @@
         document.querySelector('#modalCardLegalities');
 
     let modalDebounceTimer;
+    let currentPreviewCard = null;
+    let modalShowingBackFace = false;
 
 
     // ADD CARD AUTOCOMPLETE
@@ -518,7 +523,8 @@
                 const option =
                     document.createElement('option');
 
-                option.value = printing.id;
+                option.value =
+                    printing.id;
 
                 option.textContent =
                     `${printing.set_name} ` +
@@ -532,32 +538,66 @@
             }
 
             modalPrinting.disabled = false;
+
         } catch (error) {
             console.error(error);
 
             modalPrinting.innerHTML =
                 '<option value="">Unable to load printings</option>';
+
+            modalPrinting.disabled = true;
         }
     }
 
+    function getCardImage(card) {
+        return (
+            card.image_uris?.normal ||
+            card.image_uris?.large ||
+            card.card_faces?.[0]?.image_uris?.normal ||
+            card.card_faces?.[0]?.image_uris?.large ||
+            ''
+        );
+    }
+
+    function hasBackFace(card) {
+        return (
+            Array.isArray(card.card_faces) &&
+            card.card_faces.length > 1 &&
+            Boolean(card.card_faces[1]?.image_uris)
+        );
+    }
+
     function fillModalCardFields(card) {
+        currentPreviewCard = card;
+        modalShowingBackFace = false;
+
         modalScryfallId.value =
             card.id || '';
 
         modalCardImage.src =
-            card.image_uris?.display || '';
+            getCardImage(card);
+
+        if (hasBackFace(card)) {
+            modalFlipCardButton.classList.remove('d-none');
+        } else {
+            modalFlipCardButton.classList.add('d-none');
+        }
 
         modalCardTitle.textContent =
             card.name || '';
 
         modalCardManaCost.innerHTML =
-            renderManaSymbols(card.mana_cost || '');
+            renderManaSymbols(
+                getCardManaCost(card)
+            );
 
         modalCardTypeLine.textContent =
-            card.type_line || '';
+            getCardTypeLine(card);
 
         modalCardOracleText.innerHTML =
-            renderManaSymbols(card.oracle_text || '');
+            renderManaSymbols(
+                getCardOracleText(card)
+            );
 
         fillModalFinishes(
             card.finishes || []
@@ -603,6 +643,12 @@
 
     // Resets the Add Card modal whenever it is closed.
     addCardModal.addEventListener('hidden.bs.modal', () => {
+        currentPreviewCard = null;
+        modalShowingBackFace = false;
+
+        modalFlipCardButton.classList.add('d-none');
+        modalFlipCardButton.title = 'View back face';
+
         addCardModalForm.reset();
 
         modalCardSuggestions.innerHTML = '';
@@ -643,6 +689,9 @@
 
     const detailsCardImage =
         document.querySelector('#detailsCardImage');
+
+    const detailsFlipCardButton =
+        document.querySelector('#detailsFlipCardButton');
 
     const detailsCardTitle =
         document.querySelector('#detailsCardTitle');
@@ -707,9 +756,16 @@
     // Populates the Card Details modal with information from MongoDB.
     function fillCardDetailsModal(card) {
         currentDetailsCard = card;
+        detailsShowingBackFace = false;
 
         detailsCardImage.src =
             card.imageUrl || '';
+
+        if (card.backImageUrl) {
+            detailsFlipCardButton.classList.remove('d-none');
+        } else {
+            detailsFlipCardButton.classList.add('d-none');
+        }
 
         detailsCardImage.alt =
             card.name || 'Selected card';
@@ -762,7 +818,7 @@
             card.quantity || 1;
 
         editCardImage.src =
-            card.imageUrl || '';
+            getCardImage(card);
 
         editCardImage.alt =
             card.name || 'Card preview';
@@ -897,7 +953,7 @@
         selectedEditPrinting = card;
 
         editCardImage.src =
-            card.image_uris?.display || '';
+            getCardImage(card);
 
         editCardImage.alt =
             card.name || 'Card preview';
@@ -906,22 +962,59 @@
             card.name || '';
 
         editCardManaCost.innerHTML =
-            renderManaSymbols(card.mana_cost || '');
+            renderManaSymbols(
+                getCardManaCost(card)
+            );
 
         editCardTypeLine.textContent =
-            card.type_line || '';
+            getCardTypeLine(card);
 
         editCardOracleText.innerHTML =
-            renderManaSymbols(card.oracle_text || '');
+            renderManaSymbols(
+                getCardOracleText(card)
+            );
 
         editCardSet.textContent =
-        `${card.set_name || ''} ` +
+            `${card.set_name || ''} ` +
             `(${(card.set || '').toUpperCase()}) ` +
             `#${card.collector_number || ''}`;
 
         fillEditFinishes(
             card.finishes || []
         );
+    }
+
+    function getCardManaCost(card) {
+        return (
+            card.mana_cost ||
+            card.card_faces?.[0]?.mana_cost ||
+            ''
+        );
+    }
+
+
+    function getCardTypeLine(card) {
+        return (
+            card.type_line ||
+            card.card_faces?.[0]?.type_line ||
+            ''
+        );
+    }
+
+
+    function getCardOracleText(card) {
+        if (card.oracle_text) {
+            return card.oracle_text;
+        }
+
+        if (card.card_faces) {
+            return card.card_faces
+                .map(face => face.oracle_text || '')
+                .filter(Boolean)
+                .join('<br><br>');
+        }
+
+        return '';
     }
 
     // Opens the Edit Card modal using the card currently shown in Card Details.
@@ -1073,7 +1166,7 @@
         document.querySelector('#editCardSaveButton');
 
     let currentDetailsCard = null;
-
+    let detailsShowingBackFace = false;
     let selectedEditPrinting = null;
 
 
@@ -1162,6 +1255,34 @@
         }
     });
 
+    modalFlipCardButton.addEventListener('click', () => {
+        if (
+            !currentPreviewCard ||
+            !hasBackFace(currentPreviewCard)
+        ) {
+            return;
+        }
+
+        modalShowingBackFace =
+            !modalShowingBackFace;
+
+        const faceIndex =
+            modalShowingBackFace ? 1 : 0;
+
+        const face =
+            currentPreviewCard.card_faces[faceIndex];
+
+        modalCardImage.src =
+            face.image_uris?.normal ||
+            face.image_uris?.large ||
+            '';
+
+        modalFlipCardButton.title =
+            modalShowingBackFace
+                ? 'View front face'
+                : 'View back face';
+    });
+
 
     // PAGE INTERACTIONS
 
@@ -1205,6 +1326,28 @@
         Array.from(
             document.querySelectorAll('.collection-card')
         );
+
+    detailsFlipCardButton.addEventListener('click', () => {
+        if (
+            !currentDetailsCard ||
+            !currentDetailsCard.backImageUrl
+        ) {
+            return;
+        }
+
+        detailsShowingBackFace =
+            !detailsShowingBackFace;
+
+        detailsCardImage.src =
+            detailsShowingBackFace
+                ? currentDetailsCard.backImageUrl
+                : currentDetailsCard.imageUrl;
+
+        detailsFlipCardButton.title =
+            detailsShowingBackFace
+                ? 'View front face'
+                : 'View back face';
+    });
 
 
     // Filters the collection using the search bar and all active filters.

@@ -114,6 +114,11 @@ const CardSchema = new Schema(
         trim: true
     },
 
+    backImageUrl: {
+        type: String,
+        default: ""
+    },
+
     finish: {
     type: String,
     enum: {
